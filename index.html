@@ -110,9 +110,9 @@
     .demo-controls label { font-size: 12px; color: var(--text-muted); display:block; margin-bottom:4px; }
     .demo-controls input, .demo-controls select { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 10px; background: var(--bg-secondary); color: var(--text-normal);
       box-shadow: inset 0 1px 0 rgba(0,0,0,.02); }
-    .demo-controls .presets { display:flex; gap:8px; flex-wrap: wrap; margin-top: 8px; }
-    .preset { font-size: 12px; padding: 6px 10px; border: 1px dashed var(--border); border-radius: var(--radius-md); background: transparent; cursor: pointer; }
-    .preset:hover { border-color: var(--accent); color: var(--accent); }
+    .note-tabs { display:flex; gap:8px; flex-wrap: wrap; margin-top:8px; }
+    .note-tab { font-size:12px; padding:6px 10px; border:1px dashed var(--border); border-radius:var(--radius-md); background:transparent; cursor:pointer; }
+    .note-tab.active, .note-tab:hover { border-color:var(--accent); color:var(--accent); }
 
     table { width: 100%; border-collapse: collapse; }
     th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--border); font-size: 14px; }
@@ -128,10 +128,11 @@
     }
 
     /* CodeMirror tweaks */
-    .CodeMirror { height: 360px; border:1px solid var(--border); border-radius: var(--radius-md); font-size:13px; background:var(--bg-secondary); color:var(--text-normal); }
-    .CodeMirror-line { position:relative; padding-left:1.2em; }
-    .CodeMirror-line:before { content:'\2022'; position:absolute; left:0; color:var(--text-muted); }
+    .CodeMirror { height:100%; border:1px solid var(--border); border-radius: var(--radius-md); font-size:13px; background:var(--callout-bg); color:var(--text-normal); }
     .cm-tag { color:#fff; border-radius:10px; padding:1px 5px; display:inline-block; }
+
+    #notePanel { display:flex; flex-direction:column; }
+    #editorWrap { flex:1; min-height:360px; }
 
     .note-list { list-style: disc; padding-left:20px; margin:0; }
     .note-list li { margin-bottom:4px; }
@@ -233,24 +234,17 @@
     
         <div class="demo-wrap" style="align-items:start;">
           <!-- LEFT: Note editor -->
-          <div class="card panel">
-            <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;">
-              <div style="font-weight:700;">Notes (type here)</div>
-              <div style="display:flex;gap:6px;flex-wrap:wrap;">
-                <button class="preset" data-preset="daily">Daily preset</button>
-                <button class="preset" data-preset="project">Project preset</button>
-                <button class="preset" data-preset="music">Music preset</button>
-              </div>
+          <div id="notePanel" class="card panel">
+            <div style="font-weight:700;">Notes (type here)</div>
+            <div class="note-tabs">
+              <button class="note-tab active" data-note="Daily Note">Daily Note</button>
+              <button class="note-tab" data-note="Another Daily Note">Another Daily Note</button>
+              <button class="note-tab" data-note="Project Note">Project Note</button>
             </div>
-            <textarea id="noteInput" spellcheck="false">#todo refresh passport 📅 2025-09-01
-    #outreach respond to Julia from Easy Street Capital
-    #waiting city to call back with status update
-    #urgent get website up for Mary + Flow
-    #music Nightwalker | Deep Chill Music Mix https://www.youtube.com/watch?v=l5qMwxMmgUM
-    #music Stoic Serenity — Deep Future Garage https://www.youtube.com/watch?v=mW304P9EHgg
-    #todo write video on notebook use
-    #todo website up, chatgpt is fine</textarea>
-            <label style="display:flex;align-items:center;gap:6px;margin-top:8px;font-size:13px;color:var(--text-muted);">
+            <div id="editorWrap">
+              <textarea id="noteInput" spellcheck="false"></textarea>
+            </div>
+            <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text-muted);margin-top:8px;">
               <input id="includePad" type="checkbox" checked style="accent-color:var(--accent);"> Add a few sample items from other notes (to simulate vault-wide rollups)
             </label>
             <div class="callout" style="margin-top:8px;">
@@ -259,9 +253,9 @@
           </div>
 
           <!-- RIGHT: Preview -->
-          <div class="card panel">
-            <div style="font-weight:700;">Preview</div>
-            <div id="viewContainer" class="rendered-note" style="margin-top:8px;"></div>
+          <div id="previewPanel" class="panel" style="padding:0;">
+            <div style="font-weight:700; margin:12px;">Preview</div>
+            <div id="viewContainer" class="rendered-note" style="display:flex;flex-direction:column;gap:16px;padding:0 12px 12px;"></div>
           </div>
         </div>
       </div>
@@ -326,38 +320,72 @@
     });
     cm.on('change', render);
     
-    // === Sample items to simulate vault-wide rollups ===
-    const PAD_ITEMS = [
-      { title: 'Chelsea ceiling water damage (3rd floor)', tags:['todo'], due:'', url:'', view:'task' },
-      { title: 'Follow up with city about Nightingale permit', tags:['todo'], due:'', url:'', view:'task' },
-      { title: 'Start newsletter', tags:['todo'], due:'', url:'', view:'task' },
-      { title: 'Refresh passport', tags:['todo'], due:'2025-09-01', url:'', view:'task' },
-      { title: 'Nightwalker | Deep Chill Music Mix', tags:['music'], due:'2025-04-06', url:'https://www.youtube.com/watch?v=l5qMwxMmgUM', view:'music' },
-      { title: 'Stoic Serenity — Deep Future Garage', tags:['music'], due:'2025-04-06', url:'https://www.youtube.com/watch?v=mW304P9EHgg', view:'music' },
-      { title: 'Sleepless | Deep Chill Music Mix', tags:['music'], due:'2025-04-06', url:'https://www.youtube.com/watch?v=K6YVvQab0Ms', view:'music' },
-    ];
-    
-    // === Parse the note like your daily "Notes & Tasks" ===
-    function parseLines(text){
-      const items = [];
-      const lines = (text||'').split(/\r?\n/).map(l=>l.trim());
-      for (const raw of lines){
-        if(!raw) continue;
-        const tags = Array.from(raw.matchAll(/#([A-Za-z0-9_-]+)/g)).map(m=>m[1].toLowerCase());
-        const due = (raw.match(/\ud83d\udcc5\s*([0-9]{4}-[0-9]{2}-[0-9]{2})/)||[])[1] || (raw.match(/\b(202[4-9]-[01]\d-[0-3]\d)\b/)||[])[1] || '';
-        const url = (raw.match(/https?:\/\/\S+/)||[])[0] || '';
-        // strip prefix snippets like "(2025-01-06 > Notes & Tasks) 📝"
-        let title = raw.replace(/^\([^)]*\)\s*\ud83d\udcdd?\s*/,'');
-        title = title.replace(/#[A-Za-z0-9_-]+/g,'').replace(/\ud83d\udcc5\s*[0-9\/-]+/g,'').replace(/\s{2,}/g,' ').trim();
-        const view = tags.includes('music') ? 'music' : 'task';
-        items.push({ title, tags, due, url, view });
+    // === Notes ===
+    const NOTES = {
+      'Daily Note': `- [ ] #todo provide kitchen rehab estimate to Angela
+  - angela@email.com
+  - [ ] #waiting Victor: cost of cabinets
+    - 10 standard-size cabinets
+    - 2 custom-size
+  - [ ] #waiting Josh: cost of countertop
+- [ ] #music Nightwalker | Deep Chill Music Mix https://www.youtube.com/watch?v=l5qMwxMmgUM 📅 2025-04-06
+- [ ] #todo restart blogging`,
+      'Another Daily Note': `- [ ] #music Smooth Driving Music — Deep Bass — Downtempo Car Mix 📅 2025-04-04
+- [ ] #music Productivity Music — Work With Bruce Wayne Mix 📅 2025-04-05
+- [ ] #music Nightwalker | Deep Chill Music Mix 📅 2025-04-06
+- [ ] #music Stoic Serenity — Deep Future Garage 📅 2025-04-06`,
+      'Project Note': `- [ ] #todo plugin roadmap Q3
+- [ ] #todo restart blogging
+- [ ] #todo ship landing page`
+    };
+    let currentNote = 'Daily Note';
+    const noteTabs = document.querySelectorAll('.note-tab');
+
+    function parseTree(text){
+      const root = [];
+      const stack = [{ indent:-1, children:root }];
+      const lines = (text||'').split(/\r?\n/);
+      for(const line of lines){
+        if(!line.trim()) continue;
+        const indent = line.match(/^\s*/)[0].length;
+        const clean = line.trim();
+        const tags = Array.from(clean.matchAll(/#([A-Za-z0-9_-]+)/g)).map(m=>m[1].toLowerCase());
+        const due = (clean.match(/\ud83d\udcc5\s*([0-9]{4}-[0-9]{2}-[0-9]{2})/)||[])[1] || (clean.match(/\b(202[4-9]-[01]\d-[0-3]\d)\b/)||[])[1] || '';
+        const url = (clean.match(/https?:\/\/\S+/)||[])[0] || '';
+        const textContent = clean
+          .replace(/^[-*]\s*\[[x\s]\]\s*/i,'')
+          .replace(/^[-*]\s*/,'')
+          .replace(/#[A-Za-z0-9_-]+/g,'')
+          .replace(/\ud83d\udcc5\s*[0-9\/-]+/g,'')
+          .replace(url,'')
+          .replace(/\s{2,}/g,' ').trim();
+        const node = { text:textContent, tags, due, url, children:[] };
+        while(stack.length && indent <= stack[stack.length-1].indent) stack.pop();
+        stack[stack.length-1].children.push(node);
+        stack.push({ indent, children: node.children });
       }
-      return items;
+      return root;
     }
-    
+
+    function collectFromNote(name, text){
+      return parseTree(text).filter(n=>n.tags.length).map(n=>({
+        title:n.text,
+        tags:n.tags,
+        due:n.due,
+        url:n.url,
+        view:n.tags.includes('music') ? 'music' : 'task',
+        source:name,
+        children:n.children
+      }));
+    }
+
     function currentItems(){
-      const base = parseLines(cm.getValue());
-      return includePadEl?.checked ? base.concat(PAD_ITEMS) : base;
+      const base = collectFromNote(currentNote, cm.getValue());
+      if(includePadEl?.checked){
+        const others = Object.keys(NOTES).filter(n=>n!==currentNote).flatMap(n=>collectFromNote(n, NOTES[n]));
+        return base.concat(others);
+      }
+      return base;
     }
 
     function tagColor(str){
@@ -373,8 +401,8 @@
 
     function tableHTML(title, items){
       if(!items.length) return '';
-      return `<div class="table-wrap"><div style="font-weight:700;margin:8px 0;">${title}</div><table><tbody>${
-        items.map(i=>`<tr class="item"><td>${i.title}</td></tr><tr class="details"><td>${i.tags.map(t=>badge('#'+t)).join(' ')} ${i.due?`<span class="due">${i.due}</span>`:''} ${i.url?`<a href="${i.url}" target="_blank">${i.url}</a>`:''}</td></tr>`).join('')
+      return `<div class="card table-wrap"><div style="font-weight:700;margin-bottom:8px;">${title}</div><table><tbody>${
+        items.map(i=>`<tr class="item" data-note="${i.source}"><td>${renderMainLine(i)}</td></tr>${i.children.length?`<tr class="details"><td><ul>${i.children.map(renderChildLine).join('')}</ul></td></tr>`:''}`).join('')
       }</tbody></table></div>`;
     }
 
@@ -384,6 +412,16 @@
         const clean = el.textContent.replace('#','');
         el.style.background = tagColor(clean);
       });
+    }
+
+    function matchHeights(){
+      const notePanel = document.getElementById('notePanel');
+      const previewPanel = document.getElementById('previewPanel');
+      const editorWrap = document.getElementById('editorWrap');
+      if(notePanel && previewPanel && editorWrap){
+        notePanel.style.height = previewPanel.offsetHeight + 'px';
+        cm.setSize(null, editorWrap.clientHeight);
+      }
     }
 
     function render(){
@@ -398,38 +436,45 @@
           if(next) next.classList.toggle('show');
         });
       });
+      containerEl.querySelectorAll('.note-link').forEach(a=>{
+        a.addEventListener('click',e=>{ e.preventDefault(); e.stopPropagation(); loadNote(a.dataset.note); });
+      });
       styleEditorTags();
+      matchHeights();
     }
 
     if(includePadEl) includePadEl.addEventListener('input', render);
-    
-    // Presets
-    const PRESETS = {
-      daily: `#todo refresh passport 📅 2025-09-01
-    #outreach respond to Julia from Easy Street Capital
-    #waiting city to call back with status update
-    #urgent get website up for Mary + Flow
-    #music Nightwalker | Deep Chill Music Mix https://www.youtube.com/watch?v=l5qMwxMmgUM
-    #music Stoic Serenity — Deep Future Garage https://www.youtube.com/watch?v=mW304P9EHgg
-    #todo write video on notebook use
-    #todo website up, chatgpt is fine`,
-      project: `#todo plugin roadmap Q3
-    #todo restart blogging
-    #waiting PM2 alerting strategy write-up
-    #urgent ship landing page
-    #outreach ping Alex re: site copy`,
-      music: `#music Nightwalker | Deep Chill Music Mix https://www.youtube.com/watch?v=l5qMwxMmgUM 📅 2025-04-06
-    #music Stoic Serenity — Deep Future Garage https://www.youtube.com/watch?v=mW304P9EHgg 📅 2025-04-06
-    #music Sleepless | Deep Chill Music Mix https://www.youtube.com/watch?v=K6YVvQab0Ms 📅 2025-04-06`
-    };
-    document.querySelectorAll('.preset').forEach(btn=>btn.addEventListener('click', ()=>{ const p = btn.dataset.preset; cm.setValue(PRESETS[p]||''); render(); }));
-    
+
+    function loadNote(name){
+      currentNote = name;
+      noteTabs.forEach(b=>b.classList.toggle('active', b.dataset.note===name));
+      cm.setValue(NOTES[name]||'');
+      render();
+    }
+
+    noteTabs.forEach(btn=>btn.addEventListener('click',()=>loadNote(btn.dataset.note)));
+
+    function renderMainLine(i){
+      const tags = i.tags.map(t=>badge('#'+t)).join(' ');
+      const due = i.due?` <span class="due">${i.due}</span>`:'';
+      const link = `<a href="#" class="note-link" data-note="${i.source}">${i.source}</a>`;
+      const url = i.url?` <a href="${i.url}" target="_blank">${i.url}</a>`:'';
+      return `${tags} ${i.title}${due} ${link}${url}`;
+    }
+
+    function renderChildLine(c){
+      const tags = c.tags.map(t=>badge('#'+t)).join(' ');
+      const due = c.due?` <span class="due">${c.due}</span>`:'';
+      const url = c.url?` <a href="${c.url}" target="_blank">${c.url}</a>`:'';
+      return `<li>${tags} ${c.text}${due}${url}</li>`;
+    }
+
     // Footer year + theme how-to
     const yearEl = document.getElementById('year'); if(yearEl) yearEl.textContent = new Date().getFullYear();
     const themeBtn = document.getElementById('copyThemeBtn'); if(themeBtn) themeBtn.addEventListener('click', (e)=>{ e.preventDefault(); alert(`To inherit your Obsidian theme:\n\n1) Open .obsidian/themes/<YourTheme>.css\n2) Copy the CSS variable block (e.g. :root { --background-primary: ... })\n3) Paste into this file's :root and :root[data-theme="dark"] sections.\n4) Save and refresh.`); });
     
     // Initial render
-    render();
+    loadNote(currentNote);
     </script>    
 </body>
 </html>
