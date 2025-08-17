@@ -111,30 +111,34 @@
     .demo-controls label { font-size: 12px; color: var(--text-muted); display:block; margin-bottom:4px; }
     .demo-controls input, .demo-controls select { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 10px; background: var(--bg-secondary); color: var(--text-normal);
       box-shadow: inset 0 1px 0 rgba(0,0,0,.02); }
-    .note-tabs { display:flex; gap:8px; flex-wrap: wrap; margin-top:8px; }
+    .note-tabs { display:flex; gap:8px; flex-wrap: wrap; margin: 8px 0px; }
     .note-tab { font-size:12px; padding:6px 10px; border:1px dashed var(--border); border-radius:var(--radius-md); background:transparent; cursor:pointer; }
     .note-tab.active, .note-tab:hover { border-color:var(--accent); color:var(--accent); }
 
     table { width: 100%; border-collapse: collapse; }
-    th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--border); font-size: 14px; }
+    th, td { text-align: left; padding: 2px 10px; font-size: 14px; }
     th { font-weight: 700; }
     tr.item { cursor:pointer; }
     tr.item:hover { background: var(--bg-elevated); }
     tr.details { display:none; }
     tr.details.show { display:table-row; }
+    tr.details ul { margin: 0; }
     .table-wrap + .table-wrap { margin-top:20px; }
 
     .badge {
-      display:inline-block; color:#fff; padding:1px 5px; border-radius:10px; font-size:12px;
+      display:inline-block; color:#fff; padding:0px 5px; border-radius:10px; font-size:12px;
     }
 
     /* CodeMirror tweaks */
     .CodeMirror { height:100%; border:1px solid var(--border); border-radius: var(--radius-md); font-size:13px; background:var(--callout-bg); color:var(--text-normal); }
-    .cm-tag { color:#fff; border-radius:10px; padding:1px 5px; display:inline-block; }
+    .CodeMirror-lines { padding:10px; }
+    .cm-tag { color:#fff; border-radius:10px; padding:0px 5px; display:inline-block; }
 
     #notePanel { display:flex; flex-direction:column; }
     #editorWrap { flex:1; min-height:360px; }
 
+    /* .rendered-note {  } */
+    .card table { margin-bottom: 5px; }
     .note-list { list-style: disc; padding-left:20px; margin:0; }
     .note-list li { margin-bottom:4px; }
     .note-list .due { color: var(--text-muted); }
@@ -237,7 +241,7 @@
     <section id="demo">
       <div class="container">
         <h2>Live demo (notes → dashboards)</h2>
-        <p class="sub">Type in the left pane like you would in your daily note. The right pane auto-organizes items into dashboards and databases (Tasks & Music). Inline <code>#tags</code> and optional due dates (e.g. <code>📅 2025-09-01</code>) are parsed on the fly.</p>
+        <p class="sub">Type content in the left pane like you would in your notes. The right pane auto-generates dashboards based on a database built from your notes.</p>
     
         <div class="demo-wrap" style="align-items:start;">
           <!-- LEFT: Note editor -->
@@ -245,7 +249,7 @@
             <div style="font-weight:700;">Notes (type here)</div>
             <div class="note-tabs">
               <button class="note-tab active" data-note="Daily Note">Daily Note</button>
-              <button class="note-tab" data-note="Another Daily Note">Another Daily Note</button>
+              <button class="note-tab" data-note="Transaction Log">Transaction Log</button>
               <button class="note-tab" data-note="Project Note">Project Note</button>
             </div>
             <div id="editorWrap">
@@ -254,15 +258,15 @@
             <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text-muted);margin-top:8px;">
               <input id="includePad" type="checkbox" checked style="accent-color:var(--accent);"> Add a few sample items from other notes (to simulate vault-wide rollups)
             </label>
-            <div class="callout" style="margin-top:8px;">
+            <!-- <div class="callout" style="margin-top:8px;">
               Tip: In your vault, the plugin reads actual notes (frontmatter + lines) and writes real views. This demo just shows the <em>feel</em> of the flow.
-            </div>
+            </div> -->
           </div>
 
           <!-- RIGHT: Preview -->
           <div id="previewPanel" class="panel" style="padding:0;">
-            <div style="font-weight:700; margin:12px;">Preview</div>
-            <div id="viewContainer" class="rendered-note" style="display:flex;flex-direction:column;gap:16px;padding:0 12px 12px;"></div>
+            <!-- <div style="font-weight:700; margin:12px;">Preview</div> -->
+            <div id="viewContainer" class="rendered-note"></div>
           </div>
         </div>
       </div>
@@ -329,21 +333,62 @@
     
     // === Notes ===
     const NOTES = {
-      'Daily Note': `- [ ] #todo provide kitchen rehab estimate to Angela
-  - angela@email.com
-  - [ ] #waiting Victor: cost of cabinets
-    - 10 standard-size cabinets
-    - 2 custom-size
-  - [ ] #waiting Josh: cost of countertop
-- [ ] #music Nightwalker | Deep Chill Music Mix https://www.youtube.com/watch?v=l5qMwxMmgUM 📅 2025-04-06
-- [ ] #todo restart blogging`,
-      'Another Daily Note': `- [ ] #music Smooth Driving Music — Deep Bass — Downtempo Car Mix 📅 2025-04-04
-- [ ] #music Productivity Music — Work With Bruce Wayne Mix 📅 2025-04-05
-- [ ] #music Nightwalker | Deep Chill Music Mix 📅 2025-04-06
-- [ ] #music Stoic Serenity — Deep Future Garage 📅 2025-04-06`,
-      'Project Note': `- [ ] #todo plugin roadmap Q3
-- [ ] #todo restart blogging
-- [ ] #todo ship landing page`
+      'Daily Note':
+`Dump anything that comes to mind into your daily notes, all information will self-organize into a database:
+- 15 Boardwalk: guest-reported issues
+	- [ ] #todo check leak under fridge
+		- guest says they saw a small puddle
+	- [ ] #todo restock coffee and paper towels
+
+- [ ] #todo 5 Bow St: replace smoke detectors
+	- had false alarm recently
+	- they're ~8 years old now, time to update
+
+Personal assistant directly in your notebook that pulls the context from your notes:
+- I need to estimate construction costs for a 2000 sqft house in 02465 zip
+	- [x] #chatgpt can you ballpark this? ✅ 2025-08-17✓✓
+	    + Construction costs for a 2000 sqft house in zip code 02465 (Newton, MA) can range **$400,000–$800,000+** depending on finishes and labor.
+	        + Low-end: Basic finishes, modular/prefab (~$200/sqft)
+	        + Mid-range: Custom build with standard materials (~$300–$400/sqft)
+	        + High-end: Luxury finishes, complex design (~$400+/sqft)
+	    + Factors impacting cost:
+	        + Land/prep (steep lots or rocky soil increase expenses)
+	        + Local permitting fees and labor rates (Boston area is ~20% above national avg)
+	        + Material choices (e.g., hardwood vs. laminate)
+	    + Verify with local contractors for precise bids.
+
+Document music that helps you focus:
+- #music Midnight Flow Music — Night Bass
+	- https://www.youtube.com/watch?v=AVmyklX6LEA
+	- calm, focus
+	- ![[music_screenshot1.png]]`,
+
+      'Transaction Log':
+`Transaction logs are auto-populated from external APIs + IoT devices. They're color-coded to avoid confusion with your personal notes:
+- your notes are white
++ responses from outside APIs are blue
+* errors are red
+
++ #check-in 15 Boardwalk: Matt Smith ⏳ 2025-08-17 
+	+ contact info: 617-123-4567
+	+ check-out: [[2025-08-19]]
++ #payment Jordan Perkins: $2000 (Gmail sync)
++ #payment Maryann Cooper: $1385 (Plaid sync)
+	- note: will Zelle the rest by Monday
+		- [ ] #todo ping Maryann about remaining payment
++ #iot 5 Bow St: abnormal moisture levels under kitchen sink
+	- [ ] #todo check kitchen sink for leaks
++ #iot 16 Pearl St: abnormally high electric usage (60kWh/day)
+	- probably AC
+* #iot 5 Bow St: lightbulb offline (rear hallway)`,
+
+      'Project Note':
+`This page is dedicated to a specific project, it's not part of the daily notes. The content can be in whatever format you want, only tags you assign meaning to get interpreted.
+
+- [x] #todo apply for sprinkler permits ✅ 2025-08-10
+- [ ] #todo run electrical
+- [x] #pay $3500 (Mario, plumbing) ✅ 2025-08-17
+- [ ] #urgent extend building permit`
     };
     let currentNote = 'Daily Note';
     const noteTabs = document.querySelectorAll('.note-tab');
@@ -408,7 +453,7 @@
 
     function tableHTML(title, items){
       if(!items.length) return '';
-      return `<div class="card table-wrap"><div style="font-weight:700;margin-bottom:8px;">${title}</div><table><tbody>${
+      return `<div class="card table-wrap"><div style="font-weight:700;margin:3px 8px;">${title}</div><table><tbody>${
         items.map(i=>`<tr class="item" data-note="${i.source}"><td>${renderMainLine(i)}</td></tr>${i.children.length?`<tr class="details"><td><ul>${i.children.map(renderChildLine).join('')}</ul></td></tr>`:''}`).join('')
       }</tbody></table></div>`;
     }
