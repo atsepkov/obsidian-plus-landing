@@ -74,6 +74,7 @@
 
     /* Nav */
     header { position: sticky; top: 0; z-index: 50; backdrop-filter: blur(10px); background: color-mix(in srgb, var(--bg-primary) 85%, transparent); border-bottom: 1px solid var(--border); }
+    .hero .tagline { font-size: 24px; color: var(--accent); font-style: italic; }
     .nav { display: flex; align-items: center; justify-content: space-between; height: 64px; }
     .logo { display: flex; align-items: center; gap: 12px; font-weight: 800; letter-spacing: .2px; }
     .logo svg { width: 24px; height: 24px; }
@@ -171,18 +172,24 @@
     <section class="hero">
       <div class="container">
         <span class="pill">Programmable plugin • No fluff, real workflows</span>
-        <h1>Turn your vault into a living system.<br/>Automations, dashboards, and docs—<em>your way</em>.</h1>
-        <p>I've used this setup for over a year to juggle research, product work, and family life. It can fire events, run tasks, and call APIs from simple Markdown—putting the full power of no-code tools at your fingertips. You can receive notifications or transactions back into your notebook and even communicate with other notebooks. Below: a fast, interactive tour of what the plugin does and how it feels <strong>without installing anything</strong>.</p>
+        <div class="title">
+          <h1>From Notes to Systems — Instantly.</h1>
+          <p class="tagline">Track projects, streamline SOPs, and automate your workflows - without setup.</p>
+        </div>
+        <p>I've used this setup for over a year to juggle research, product work, and family life. It can fire events, 
+          run tasks, and call APIs directly from your notes, written in intuitive <strong>Markdown</strong> - putting the full power of no-code 
+          tools at your fingertips, without clunky drag-and-drop interfaces. Track status of your team's work, send them tasks/tickets 
+          to work on, and communicate with customers directly from your notebook. Receive payment notifications, status updates directly in your project, no context switch.</p>
         <div class="cta">
           <a href="#demo" class="btn primary">▶ Try the Live Demo</a>
           <a href="#download" class="btn">⬇ Get the Starter Vault</a>
           <a href="#use-cases" class="btn ghost">📚 See Use Cases</a>
         </div>
-        <div class="proof">
+        <!-- <div class="proof">
           <div class="meter">⚡ Saves ~4–6 hrs/week</div>
           <div class="meter">🧩 Works with Dataview</div>
           <div class="meter">🛠️ Scriptable JS actions</div>
-        </div>
+        </div> -->
         <div class="hero-visual card">
           <!-- Replace with your animated GIF or screenshot from your vault -->
           <!-- <img alt="Plugin screenshot" src="https://images.unsplash.com/photo-1555066931-4365d14bab8c?q=80&w=1400&auto=format&fit=crop" /> -->
@@ -229,7 +236,7 @@
     <!-- LIVE DEMO (Dataview‑ish) -->
     <section id="demo">
       <div class="container">
-        <h2>Live demo (note → dashboards)</h2>
+        <h2>Live demo (notes → dashboards)</h2>
         <p class="sub">Type in the left pane like you would in your daily note. The right pane auto-organizes items into dashboards and databases (Tasks & Music). Inline <code>#tags</code> and optional due dates (e.g. <code>📅 2025-09-01</code>) are parsed on the fly.</p>
     
         <div class="demo-wrap" style="align-items:start;">
