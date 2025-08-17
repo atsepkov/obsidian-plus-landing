@@ -194,12 +194,12 @@
     <!-- USE CASES -->
     <section id="use-cases">
       <div class="container">
-        <h2>Three quick wins</h2>
-        <p class="sub">Real vault patterns I use daily. Click a preset below the demo to load each scenario.</p>
+        <h2>How it actually feels in a real vault</h2>
+        <p class="sub">Three slices from my workflow, mirrored by the live demo below.</p>
         <div class="grid features" style="margin-top:18px;">
-          <div class="feature card"><h3>Daily Control Center</h3><p>One page to see today’s meetings, tasks, and notes—auto‑generated at 6:00am.</p></div>
-          <div class="feature card"><h3>Project Tracker</h3><p>Dataview tables grouped by status, with review dates and owners auto‑calculated.</p></div>
-          <div class="feature card"><h3>Research Inbox</h3><p>Drop raw clippings; the plugin labels, links, and queues summaries for later.</p></div>
+          <div class="feature card"><h3>Daily note → Notes & Tasks</h3><p>Free-form jotting in <em>Notes & Tasks</em> (hashtags + dates inline). The plugin parses as you type and routes items where they belong.</p></div>
+          <div class="feature card"><h3>Top-of-note Dashboard</h3><p>A lightweight overview at the top of the daily note: counts by tag (#todo, #waiting, #urgent) and a short list of upcoming items.</p></div>
+          <div class="feature card"><h3>Music library from notes</h3><p>Lines tagged <code>#music</code> (optionally with a date + URL) roll into a curated “Music” view with search and quick open.</p></div>
         </div>
       </div>
     </section>
@@ -207,50 +207,57 @@
     <!-- LIVE DEMO (Dataview‑ish) -->
     <section id="demo">
       <div class="container">
-        <h2>Live demo (no install)</h2>
-        <p class="sub">This simulates a Dataview‑style query on a mini dataset. Filter by tag and status; the table updates instantly. In your vault, the plugin wires these views to real notes and actions.</p>
-
-        <div class="demo-wrap">
-          <div class="card panel demo-controls">
-            <div class="row">
-              <div>
-                <label for="queryText">Search text</label>
-                <input id="queryText" type="text" placeholder="e.g. sprint, landlord, meeting" />
-              </div>
-              <div>
-                <label for="tagFilter">Tag</label>
-                <select id="tagFilter"><option value="">Any</option></select>
-              </div>
-            </div>
-            <div class="row">
-              <div>
-                <label for="statusFilter">Status</label>
-                <select id="statusFilter"><option value="">Any</option></select>
-              </div>
-              <div>
-                <label for="ownerFilter">Owner</label>
-                <select id="ownerFilter"><option value="">Any</option></select>
+        <h2>Live demo (note → dashboards)</h2>
+        <p class="sub">Type in the left pane like you would in your daily note. The right pane auto-organizes items into dashboards and databases (Tasks & Music). Inline <code>#tags</code> and optional due dates (e.g. <code>📅 2025-09-01</code>) are parsed on the fly.</p>
+    
+        <div class="demo-wrap" style="align-items:start;">
+          <!-- LEFT: Note editor -->
+          <div class="card panel" style="padding:16px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
+              <div style="font-weight:700;">Notes & Tasks (type here)</div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                <button class="preset" data-preset="daily">Daily preset</button>
+                <button class="preset" data-preset="project">Project preset</button>
+                <button class="preset" data-preset="music">Music preset</button>
               </div>
             </div>
-            <div class="presets">
-              <button class="preset" data-preset="daily">▶ Daily Control Center</button>
-              <button class="preset" data-preset="projects">📊 Project Tracker</button>
-              <button class="preset" data-preset="research">🧠 Research Inbox</button>
-            </div>
-            <div class="callout" style="margin-top:12px;">
-              Tip: this is static HTML + JS. For your site, swap the sample dataset with JSON exported from your vault, or pre‑render views during your build.
+            <textarea id="noteInput" spellcheck="false" style="margin-top:10px;width:100%;height:360px;border:1px solid var(--border);border-radius:12px;background:var(--bg-secondary);color:var(--text-normal);padding:12px;font-family:var(--font-mono);font-size:13px;line-height:1.5;">#todo refresh passport 📅 2025-09-01
+    #outreach respond to Julia from Easy Street Capital
+    #waiting city to call back with status update
+    #urgent get website up for Mary + Flow
+    #music Nightwalker | Deep Chill Music Mix https://www.youtube.com/watch?v=l5qMwxMmgUM
+    #music Stoic Serenity — Deep Future Garage https://www.youtube.com/watch?v=mW304P9EHgg
+    #todo write video on notebook use
+    #todo website up, chatgpt is fine</textarea>
+            <label style="display:flex;align-items:center;gap:8px;margin-top:10px;font-size:13px;color:var(--text-muted);">
+              <input id="includePad" type="checkbox" checked style="accent-color:var(--accent);"> Add a few sample items from other notes (to simulate vault-wide rollups)
+            </label>
+            <div class="callout" style="margin-top:10px;">
+              Tip: In your vault, the plugin reads actual notes (frontmatter + lines) and writes real views. This demo just shows the <em>feel</em> of the flow.
             </div>
           </div>
-
-          <div class="card panel">
-            <div style="overflow:auto;">
-              <table id="results">
-                <thead>
-                  <tr><th>Title</th><th>Tags</th><th>Status</th><th>Owner</th><th>Due</th></tr>
-                </thead>
-                <tbody></tbody>
-              </table>
+    
+          <!-- RIGHT: Views -->
+          <div class="card panel" style="padding:0;">
+            <div style="padding:12px 12px 0;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
+              <div class="tabbar" style="display:flex;gap:6px;flex-wrap:wrap;">
+                <a href="#" class="pill viewTab" data-view="dashboard">Dashboard</a>
+                <a href="#" class="pill viewTab" data-view="tasks">Tasks</a>
+                <a href="#" class="pill viewTab" data-view="music">Music</a>
+              </div>
+              <div style="display:flex;gap:8px;align-items:center;">
+                <input id="globalSearch" type="text" placeholder="Search..." style="padding:10px 12px;border:1px solid var(--border);border-radius:10px;background:var(--bg-secondary);color:var(--text-normal);min-width:220px;">
+                <select id="statusFilter2" style="padding:10px 12px;border:1px solid var(--border);border-radius:10px;background:var(--bg-secondary);color:var(--text-normal);">
+                  <option value="">Any tag</option>
+                  <option value="todo">#todo</option>
+                  <option value="outreach">#outreach</option>
+                  <option value="waiting">#waiting</option>
+                  <option value="urgent">#urgent</option>
+                  <option value="music">#music</option>
+                </select>
+              </div>
             </div>
+            <div id="viewContainer" style="padding:12px 12px 16px;"></div>
           </div>
         </div>
       </div>
@@ -290,108 +297,159 @@
       const saved = localStorage.getItem('theme');
       const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
       root.dataset.theme = saved || (prefersDark ? 'dark' : 'light');
-      document.getElementById('themeToggle').addEventListener('click', (e) => {
-        e.preventDefault();
-        root.dataset.theme = root.dataset.theme === 'dark' ? 'light' : 'dark';
-        localStorage.setItem('theme', root.dataset.theme);
-      });
-      window.addEventListener('keydown', (ev) => {
-        if ((ev.metaKey || ev.ctrlKey) && ev.key.toLowerCase() === 'd') {
-          root.dataset.theme = root.dataset.theme === 'dark' ? 'light' : 'dark';
-          localStorage.setItem('theme', root.dataset.theme);
-          ev.preventDefault();
-        }
-      });
+      const t = document.getElementById('themeToggle');
+      if (t) t.addEventListener('click', (e) => { e.preventDefault(); toggleTheme(); });
+      function toggleTheme(){ root.dataset.theme = root.dataset.theme === 'dark' ? 'light' : 'dark'; localStorage.setItem('theme', root.dataset.theme); }
+      window.addEventListener('keydown', (ev) => { if ((ev.metaKey || ev.ctrlKey) && ev.key.toLowerCase() === 'd') { toggleTheme(); ev.preventDefault(); } });
     })();
-
-    // === Demo dataset (replace with JSON exported from your vault) ===
-    const DATA = [
-      { title: 'Daily note — 2025-08-16', tags: ['daily','meeting'], status: 'Planned', owner: 'Maria', due: '2025-08-16' },
-      { title: 'Townhome project brief', tags: ['project','real-estate'], status: 'Active', owner: 'Maria', due: '2025-09-01' },
-      { title: 'HUD paperwork checklist', tags: ['project','ops'], status: 'Blocked', owner: 'Courtney', due: '2025-08-22' },
-      { title: 'Plugin roadmap Q3', tags: ['project','dev'], status: 'Active', owner: 'Maria', due: '2025-08-30' },
-      { title: 'Research — neurogenesis notes', tags: ['research'], status: 'Backlog', owner: 'Maria', due: '' },
-      { title: 'Landlord call notes', tags: ['daily','ops'], status: 'Done', owner: 'Maria', due: '2025-08-10' },
-      { title: 'Marketing ideas — launch', tags: ['marketing','project'], status: 'Active', owner: 'Alex', due: '2025-08-25' },
-      { title: 'Dataview query examples', tags: ['dev','docs'], status: 'Backlog', owner: 'Maria', due: '' },
+    
+    // === Elements ===
+    const editorEl = document.getElementById('noteInput');
+    const includePadEl = document.getElementById('includePad');
+    const containerEl = document.getElementById('viewContainer');
+    const statusFilterEl = document.getElementById('statusFilter2');
+    const searchEl = document.getElementById('globalSearch');
+    
+    // === Sample items to simulate vault-wide rollups ===
+    const PAD_ITEMS = [
+      { title: 'Chelsea ceiling water damage (3rd floor)', tags:['todo'], due:'', url:'', view:'task' },
+      { title: 'Follow up with city about Nightingale permit', tags:['todo'], due:'', url:'', view:'task' },
+      { title: 'Start newsletter', tags:['todo'], due:'', url:'', view:'task' },
+      { title: 'Refresh passport', tags:['todo'], due:'2025-09-01', url:'', view:'task' },
+      { title: 'Nightwalker | Deep Chill Music Mix', tags:['music'], due:'2025-04-06', url:'https://www.youtube.com/watch?v=l5qMwxMmgUM', view:'music' },
+      { title: 'Stoic Serenity — Deep Future Garage', tags:['music'], due:'2025-04-06', url:'https://www.youtube.com/watch?v=mW304P9EHgg', view:'music' },
+      { title: 'Sleepless | Deep Chill Music Mix', tags:['music'], due:'2025-04-06', url:'https://www.youtube.com/watch?v=K6YVvQab0Ms', view:'music' },
     ];
-
-    const els = {
-      query: document.getElementById('queryText'),
-      tag: document.getElementById('tagFilter'),
-      status: document.getElementById('statusFilter'),
-      owner: document.getElementById('ownerFilter'),
-      tbody: document.querySelector('#results tbody'),
+    
+    // === Parse the note like your daily "Notes & Tasks" ===
+    function parseLines(text){
+      const items = [];
+      const lines = (text||'').split(/\r?\n/).map(l=>l.trim());
+      for (const raw of lines){
+        if(!raw) continue;
+        const tags = Array.from(raw.matchAll(/#([A-Za-z0-9_-]+)/g)).map(m=>m[1].toLowerCase());
+        const due = (raw.match(/\ud83d\udcc5\s*([0-9]{4}-[0-9]{2}-[0-9]{2})/)||[])[1] || (raw.match(/\b(202[4-9]-[01]\d-[0-3]\d)\b/)||[])[1] || '';
+        const url = (raw.match(/https?:\/\/\S+/)||[])[0] || '';
+        // strip prefix snippets like "(2025-01-06 > Notes & Tasks) 📝"
+        let title = raw.replace(/^\([^)]*\)\s*\ud83d\udcdd?\s*/,'');
+        title = title.replace(/#[A-Za-z0-9_-]+/g,'').replace(/\ud83d\udcc5\s*[0-9\/-]+/g,'').replace(/\s{2,}/g,' ').trim();
+        const view = tags.includes('music') ? 'music' : 'task';
+        items.push({ title, tags, due, url, view });
+      }
+      return items;
+    }
+    
+    function currentItems(){
+      const base = parseLines(editorEl?.value);
+      return includePadEl?.checked ? base.concat(PAD_ITEMS) : base;
+    }
+    
+    function applyGlobalFilters(items){
+      const q = (searchEl?.value||'').toLowerCase();
+      const tag = statusFilterEl?.value || '';
+      return items.filter(it => (!q || (it.title.toLowerCase().includes(q) || it.tags.some(t=>t.includes(q)))) && (!tag || it.tags.includes(tag)));
+    }
+    
+    // === View renderers ===
+    function badge(text){ return `<span class="badge">${text}</span>`; }
+    
+    function renderDashboard(){
+      const items = applyGlobalFilters(currentItems());
+      const count = (t)=> items.filter(i=>i.tags.includes(t)).length;
+      const upcoming = items.filter(i=>i.view==='task' && i.due).sort((a,b)=>a.due.localeCompare(b.due)).slice(0,6);
+      return `
+        <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(220px,1fr));">
+          <div class="card" style="padding:14px;">⚙️ ${badge('#todo')} ${count('todo')} tasks</div>
+          <div class="card" style="padding:14px;">📣 ${badge('#outreach')} ${count('outreach')} items</div>
+          <div class="card" style="padding:14px;">⏳ ${badge('#waiting')} ${count('waiting')} waiting</div>
+          <div class="card" style="padding:14px;">🚨 ${badge('#urgent')} ${count('urgent')} urgent</div>
+        </div>
+        <div class="card" style="margin-top:14px;padding:14px;">
+          <div style="font-weight:700;margin-bottom:8px;">Upcoming</div>
+          <table style="width:100%;border-collapse:collapse;">
+            <thead><tr><th>Title</th><th>Tags</th><th>Due</th></tr></thead>
+            <tbody>
+              ${upcoming.map(i=>`<tr><td>${i.title}</td><td>${i.tags.map(t=>badge('#'+t)).join(' ')}</td><td>${i.due||'—'}</td></tr>`).join('') || `<tr><td colspan="3" style="color:var(--text-muted)">No upcoming items.</td></tr>`}
+            </tbody>
+          </table>
+        </div>`;
+    }
+    
+    function renderTasks(){
+      const items = applyGlobalFilters(currentItems()).filter(i=>i.view==='task');
+      return `
+        <div class="card" style="padding:0;overflow:auto;">
+          <table style="width:100%;border-collapse:collapse;">
+            <thead><tr><th>Title</th><th>Tags</th><th>Due</th></tr></thead>
+            <tbody>
+              ${items.map(i=>`<tr><td>${i.title}</td><td>${i.tags.map(t=>badge('#'+t)).join(' ')}</td><td>${i.due||'—'}</td></tr>`).join('') || `<tr><td colspan="3" style="color:var(--text-muted)">No tasks match.</td></tr>`}
+            </tbody>
+          </table>
+        </div>`;
+    }
+    
+    function renderMusic(){
+      const items = applyGlobalFilters(currentItems()).filter(i=>i.view==='music');
+      items.sort((a,b)=> (b.due||'').localeCompare(a.due||''));
+      return `
+        <div class="card" style="padding:12px;">
+          ${items.map(i=>`
+            <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;border-bottom:1px solid var(--border);padding:8px 0;">
+              <div>
+                ${badge('#music')} <strong>${i.title}</strong> ${i.due?`<span style="color:var(--text-muted)">(${i.due})</span>`:''}
+              </div>
+              <div>
+                ${i.url?`<a href="${i.url}" target="_blank" rel="noopener">Open</a>`:''}
+              </div>
+            </div>
+          `).join('') || `<div style="color:var(--text-muted)">No music items yet. Add a line with <code>#music</code>.</div>`}
+        </div>`;
+    }
+    
+    const VIEWS = { dashboard: renderDashboard, tasks: renderTasks, music: renderMusic };
+    let currentView = 'dashboard';
+    
+    function render(){ if(!containerEl) return; containerEl.innerHTML = VIEWS[currentView](); highlightActiveTab(); }
+    
+    function highlightActiveTab(){
+      document.querySelectorAll('.viewTab').forEach(a=>{
+        if(a.dataset.view === currentView){ a.style.background = 'var(--bg-secondary)'; a.style.borderColor = 'var(--accent)'; a.style.color = 'var(--text-normal)'; }
+        else { a.style.background = 'transparent'; a.style.borderColor = 'var(--border)'; a.style.color = 'var(--text-muted)'; }
+      });
+    }
+    
+    // Events
+    document.querySelectorAll('.viewTab').forEach(a=>a.addEventListener('click', (e)=>{ e.preventDefault(); currentView = a.dataset.view; render(); }));
+    [editorEl, includePadEl, statusFilterEl, searchEl].forEach(el=> el && el.addEventListener('input', render));
+    
+    // Presets
+    const PRESETS = {
+      daily: `#todo refresh passport 📅 2025-09-01
+    #outreach respond to Julia from Easy Street Capital
+    #waiting city to call back with status update
+    #urgent get website up for Mary + Flow
+    #music Nightwalker | Deep Chill Music Mix https://www.youtube.com/watch?v=l5qMwxMmgUM
+    #music Stoic Serenity — Deep Future Garage https://www.youtube.com/watch?v=mW304P9EHgg
+    #todo write video on notebook use
+    #todo website up, chatgpt is fine`,
+      project: `#todo plugin roadmap Q3
+    #todo restart blogging
+    #waiting PM2 alerting strategy write-up
+    #urgent ship landing page
+    #outreach ping Alex re: site copy`,
+      music: `#music Nightwalker | Deep Chill Music Mix https://www.youtube.com/watch?v=l5qMwxMmgUM 📅 2025-04-06
+    #music Stoic Serenity — Deep Future Garage https://www.youtube.com/watch?v=mW304P9EHgg 📅 2025-04-06
+    #music Sleepless | Deep Chill Music Mix https://www.youtube.com/watch?v=K6YVvQab0Ms 📅 2025-04-06`
     };
-
-    function unique(arr) { return Array.from(new Set(arr)); }
-
-    function populateFilters() {
-      const tags = unique(DATA.flatMap(d => d.tags)).sort();
-      tags.forEach(t => { const o=document.createElement('option'); o.value=t; o.textContent=t; els.tag.appendChild(o); });
-      const statuses = unique(DATA.map(d => d.status)).sort();
-      statuses.forEach(s => { const o=document.createElement('option'); o.value=s; o.textContent=s; els.status.appendChild(o); });
-      const owners = unique(DATA.map(d => d.owner)).sort();
-      owners.forEach(o => { const opt=document.createElement('option'); opt.value=o; opt.textContent=o; els.owner.appendChild(opt); });
-    }
-
-    function matches(d, q) {
-      const txt = (d.title + ' ' + d.tags.join(' ')).toLowerCase();
-      return !q || txt.includes(q.toLowerCase());
-    }
-
-    function render() {
-      const q = els.query.value.trim();
-      const tag = els.tag.value;
-      const status = els.status.value;
-      const owner = els.owner.value;
-
-      const rows = DATA.filter(d =>
-        matches(d, q) && (!tag || d.tags.includes(tag)) && (!status || d.status === status) && (!owner || d.owner === owner)
-      ).map(d => `
-        <tr>
-          <td>${d.title}</td>
-          <td>${d.tags.map(t=>`<span class="badge">#${t}</span>`).join(' ')}</td>
-          <td><span class="badge">${d.status}</span></td>
-          <td>${d.owner}</td>
-          <td>${d.due || '—'}</td>
-        </tr>`).join('');
-
-      els.tbody.innerHTML = rows || `<tr><td colspan="5" style="color:var(--text-muted)">No results. Try widening your filters.</td></tr>`;
-    }
-
-    ['input','change'].forEach(evt => {
-      els.query.addEventListener(evt, render);
-      els.tag.addEventListener(evt, render);
-      els.status.addEventListener(evt, render);
-      els.owner.addEventListener(evt, render);
-    });
-
-    // Presets mimic 3 use cases
-    document.querySelectorAll('.preset').forEach(btn => btn.addEventListener('click', () => {
-      const p = btn.dataset.preset;
-      els.query.value = '';
-      els.tag.value = '';
-      els.status.value = '';
-      els.owner.value = '';
-      if (p === 'daily') { els.tag.value = 'daily'; }
-      if (p === 'projects') { els.tag.value = 'project'; els.status.value = 'Active'; }
-      if (p === 'research') { els.tag.value = 'research'; }
-      render();
-    }));
-
-    // Footer year
-    document.getElementById('year').textContent = new Date().getFullYear();
-
-    // Theme how-to
-    document.getElementById('copyThemeBtn').addEventListener('click', (e) => {
-      e.preventDefault();
-      alert(`To inherit your Obsidian theme:\n\n1) Open .obsidian/themes/<YourTheme>.css\n2) Copy the CSS variable block (e.g. :root { --background-primary: ... })\n3) Paste into this file's :root and :root[data-theme="dark"] sections.\n4) Save and refresh.`);
-    });
-
-    // Init
-    populateFilters();
+    document.querySelectorAll('.preset').forEach(btn=>btn.addEventListener('click', ()=>{ const p = btn.dataset.preset; editorEl.value = PRESETS[p]||''; render(); }));
+    
+    // Footer year + theme how-to
+    const yearEl = document.getElementById('year'); if(yearEl) yearEl.textContent = new Date().getFullYear();
+    const themeBtn = document.getElementById('copyThemeBtn'); if(themeBtn) themeBtn.addEventListener('click', (e)=>{ e.preventDefault(); alert(`To inherit your Obsidian theme:\n\n1) Open .obsidian/themes/<YourTheme>.css\n2) Copy the CSS variable block (e.g. :root { --background-primary: ... })\n3) Paste into this file's :root and :root[data-theme="dark"] sections.\n4) Save and refresh.`); });
+    
+    // Initial render
     render();
-  </script>
+    </script>    
 </body>
 </html>
+
