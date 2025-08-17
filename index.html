@@ -397,10 +397,11 @@ Document music that helps you focus:
       const root = [];
       const stack = [{ indent:-1, children:root }];
       const lines = (text||'').split(/\r?\n/);
-      for(const line of lines){
-        if(!line.trim()) continue;
+      lines.forEach((line, idx)=>{
+        if(!line.trim()) return;
         const indent = line.match(/^\s*/)[0].length;
         const clean = line.trim();
+        const checked = /^[-*]\s*\[x\]/i.test(clean);
         const tags = Array.from(clean.matchAll(/#([A-Za-z0-9_-]+)/g)).map(m=>m[1].toLowerCase());
         const due = (clean.match(/\ud83d\udcc5\s*([0-9]{4}-[0-9]{2}-[0-9]{2})/)||[])[1] || (clean.match(/\b(202[4-9]-[01]\d-[0-3]\d)\b/)||[])[1] || '';
         const url = (clean.match(/https?:\/\/\S+/)||[])[0] || '';
@@ -408,14 +409,14 @@ Document music that helps you focus:
           .replace(/^[-*]\s*\[[x\s]\]\s*/i,'')
           .replace(/^[-*]\s*/,'')
           .replace(/#[A-Za-z0-9_-]+/g,'')
-          .replace(/\ud83d\udcc5\s*[0-9\/-]+/g,'')
+          .replace(/\ud83d\udcc5\s*[0-9\/\-]+/g,'')
           .replace(url,'')
           .replace(/\s{2,}/g,' ').trim();
-        const node = { text:textContent, tags, due, url, children:[] };
+        const node = { text:textContent, tags, due, url, checked, line:idx, children:[] };
         while(stack.length && indent <= stack[stack.length-1].indent) stack.pop();
         stack[stack.length-1].children.push(node);
         stack.push({ indent, children: node.children });
-      }
+      });
       return root;
     }
 
@@ -425,6 +426,8 @@ Document music that helps you focus:
         tags:n.tags,
         due:n.due,
         url:n.url,
+        checked:n.checked,
+        line:n.line,
         view:n.tags.includes('music') ? 'music' : 'task',
         source:name,
         children:n.children
@@ -491,6 +494,27 @@ Document music that helps you focus:
       containerEl.querySelectorAll('.note-link').forEach(a=>{
         a.addEventListener('click',e=>{ e.preventDefault(); e.stopPropagation(); loadNote(a.dataset.note); });
       });
+      containerEl.querySelectorAll('.chk').forEach(cb=>{
+        cb.addEventListener('click',e=>e.stopPropagation());
+        cb.addEventListener('change',e=>{
+          e.stopPropagation();
+          const note = cb.dataset.note;
+          const line = Number(cb.dataset.line);
+          const checked = cb.checked;
+          if(note===currentNote){
+            const lineText = cm.getLine(line);
+            const newLine = lineText.replace(/\[(x| )\]/i, checked ? '[x]' : '[ ]');
+            cm.replaceRange(newLine, {line, ch:0}, {line, ch:lineText.length});
+          }else{
+            const lines = (NOTES[note]||'').split(/\r?\n/);
+            if(line < lines.length){
+              lines[line] = lines[line].replace(/\[(x| )\]/i, checked ? '[x]' : '[ ]');
+              NOTES[note] = lines.join('\n');
+            }
+            render();
+          }
+        });
+      });
       styleEditorTags();
       matchHeights();
     }
@@ -507,11 +531,12 @@ Document music that helps you focus:
     noteTabs.forEach(btn=>btn.addEventListener('click',()=>loadNote(btn.dataset.note)));
 
     function renderMainLine(i){
+      const checkbox = i.view === 'task' ? `<input type="checkbox" class="chk" data-note="${i.source}" data-line="${i.line}"${i.checked?' checked':''}> ` : '';
       const tags = i.tags.map(t=>badge('#'+t)).join(' ');
       const due = i.due?` <span class="due">${i.due}</span>`:'';
       const link = `<a href="#" class="note-link" data-note="${i.source}">${i.source}</a>`;
       const url = i.url?` <a href="${i.url}" target="_blank">${i.url}</a>`:'';
-      return `${tags} ${i.title}${due} ${link}${url}`;
+      return `${checkbox}${tags} ${i.title}${due} ${link}${url}`;
     }
 
     function renderChildLine(c){
