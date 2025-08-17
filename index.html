@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Obsidian+ — Programmable Productivity, Your Way</title>
+  <meta name="description" content="A programmable Obsidian plugin that turns your vault into a living system. See live demos, real use cases, and grab a starter vault pre‑configured in minutes." />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256'><path fill='%235960f1' d='M128 10 30 74v108l98 64 98-64V74z'/></svg>">
+  <style>
+    /*
+      ==============================
+      THEME LAYER — Obsidian-ish
+      ==============================
+      If you want this page to inherit your Obsidian theme, paste your theme's CSS variables
+      here (usually found in .obsidian/themes/<Theme>.css), especially color tokens like:
+      --background-primary, --background-secondary, --text-normal, --text-muted,
+      --interactive-accent, --accent-strong, --background-modifier-border, etc.
+      Keep the variable names below and override their values.
+    */
+    :root {
+      /* Light defaults */
+      --bg-primary: #f7f7f8;             /* ≈ background-primary */
+      --bg-secondary: #ffffff;           /* ≈ background-secondary */
+      --bg-elevated: #ffffffee;
+      --text-normal: #1b1f23;            /* ≈ text-normal */
+      --text-muted: #5f6b7a;             /* ≈ text-muted */
+      --accent: #5960f1;                 /* ≈ interactive-accent */
+      --accent-strong: #3b41dd;          /* ≈ accent-strong */
+      --border: #e5e7eb;                 /* ≈ background-modifier-border */
+      --callout-bg: #eef2ff;
+      --success: #16a34a;
+      --warning: #f59e0b;
+      --danger:  #ef4444;
+      --shadow: 0 8px 28px rgba(0,0,0,.08);
+      --radius-xl: 18px;
+      --radius-lg: 14px;
+      --radius-md: 10px;
+      --content-max: 1080px;
+      --font-sans: ui-sans-serif, -apple-system, Segoe UI, Roboto, Inter, system-ui, "Helvetica Neue", Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    }
+
+    /* Dark mode (auto + toggle) */
+    :root[data-theme="dark"] {
+      --bg-primary: #121317;
+      --bg-secondary: #171922;
+      --bg-elevated: #171922ee;
+      --text-normal: #e7eaf0;
+      --text-muted: #a2a8b6;
+      --accent: #7b7ffb;
+      --accent-strong: #6366f1;
+      --border: #262b35;
+      --callout-bg: #1e2232;
+      --shadow: 0 12px 36px rgba(0,0,0,.35);
+    }
+
+    /* Base */
+    html, body { height: 100%; }
+    body {
+      margin: 0; background: var(--bg-primary); color: var(--text-normal);
+      font-family: var(--font-sans); line-height: 1.6; -webkit-font-smoothing: antialiased;
+    }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { color: var(--accent-strong); }
+    .container { width: 100%; max-width: var(--content-max); margin: 0 auto; padding: 0 20px; }
+    .btn { display: inline-flex; align-items: center; gap: 10px; padding: 12px 18px; border-radius: var(--radius-lg); border: 1px solid var(--border); background: var(--bg-secondary); box-shadow: var(--shadow); font-weight: 600; }
+    .btn.primary { background: linear-gradient(180deg, var(--accent), var(--accent-strong)); color: white; border-color: transparent; }
+    .btn.ghost { background: transparent; }
+    .pill { display: inline-flex; align-items: center; gap: 8px; padding: 6px 10px; border-radius: 999px; border: 1px solid var(--border); background: var(--bg-secondary); font-size: 12px; color: var(--text-muted); }
+    .kbd { font-family: var(--font-mono); font-size: 12px; border: 1px solid var(--border); border-bottom-width: 3px; padding: 2px 6px; border-radius: 6px; background: var(--bg-secondary); }
+    .card { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: var(--radius-xl); box-shadow: var(--shadow); }
+    .grid { display: grid; gap: 20px; }
+
+    /* Nav */
+    header { position: sticky; top: 0; z-index: 50; backdrop-filter: blur(10px); background: color-mix(in srgb, var(--bg-primary) 85%, transparent); border-bottom: 1px solid var(--border); }
+    .nav { display: flex; align-items: center; justify-content: space-between; height: 64px; }
+    .logo { display: flex; align-items: center; gap: 12px; font-weight: 800; letter-spacing: .2px; }
+    .logo svg { width: 24px; height: 24px; }
+    .nav a { color: var(--text-muted); font-weight: 600; margin-left: 16px; }
+    .nav a:hover { color: var(--text-normal); }
+
+    /* Hero */
+    .hero { padding: 72px 0 56px; position: relative; }
+    .hero h1 { font-size: clamp(28px, 5vw, 44px); line-height: 1.1; margin: 0 0 14px; }
+    .hero p { font-size: clamp(16px, 2.2vw, 18px); color: var(--text-muted); margin: 0 0 26px; }
+    .hero .cta { display: flex; gap: 12px; flex-wrap: wrap; }
+    .hero-visual { margin-top: 28px; border-radius: var(--radius-xl); overflow: hidden; border: 1px solid var(--border); box-shadow: var(--shadow); }
+    .hero-visual img { width: 100%; display: block; }
+
+    /* Social proof */
+    .proof { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 24px; }
+    .proof .meter { padding: 12px 14px; border-radius: var(--radius-md); border: 1px solid var(--border); background: var(--bg-secondary); font-size: 14px; color: var(--text-muted); display:flex; align-items:center; gap:10px; }
+
+    /* Sections */
+    section { padding: 56px 0; }
+    h2 { font-size: clamp(22px, 3.4vw, 32px); margin: 0 0 10px; }
+    .sub { color: var(--text-muted); margin-top: 6px; }
+
+    /* Features */
+    .features { grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); }
+    .feature { padding: 18px; }
+    .feature h3 { margin: 0 0 4px; font-size: 18px; }
+    .feature p { margin: 0; color: var(--text-muted); }
+
+    /* Demo */
+    .demo-wrap { display: grid; grid-template-columns: 360px 1fr; gap: 20px; }
+    .panel { padding: 18px; }
+    .demo-controls .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+    .demo-controls label { font-size: 12px; color: var(--text-muted); display:block; margin-bottom:4px; }
+    .demo-controls input, .demo-controls select { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 10px; background: var(--bg-secondary); color: var(--text-normal);
+      box-shadow: inset 0 1px 0 rgba(0,0,0,.02); }
+    .demo-controls .presets { display:flex; gap:8px; flex-wrap: wrap; margin-top: 8px; }
+    .preset { font-size: 12px; padding: 6px 10px; border: 1px dashed var(--border); border-radius: 999px; background: transparent; cursor: pointer; }
+    .preset:hover { border-color: var(--accent); color: var(--accent); }
+
+    table { width: 100%; border-collapse: collapse; }
+    th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--border); font-size: 14px; }
+    th { font-weight: 700; }
+    .badge { padding: 2px 8px; border-radius: 999px; font-size: 12px; border: 1px solid var(--border); }
+
+    /* Callouts */
+    .callout { background: var(--callout-bg); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 14px 16px; }
+
+    /* Footer */
+    footer { padding: 40px 0; border-top: 1px solid var(--border); color: var(--text-muted); }
+
+    /* Responsive */
+    @media (max-width: 960px) { .demo-wrap { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container nav">
+      <div class="logo">
+        <svg viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M128 10L30 74v108l98 64 98-64V74L128 10Z" fill="currentColor"/></svg>
+        <span>Obsidian<span style="color:var(--accent)">+</span></span>
+      </div>
+      <nav>
+        <a href="#story">Story</a>
+        <a href="#use-cases">Use cases</a>
+        <a href="#demo">Live demo</a>
+        <a href="#download">Download</a>
+        <a id="themeToggle" class="pill" href="#">Toggle <span class="kbd">⌘/Ctrl</span> + <span class="kbd">D</span></a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <!-- HERO -->
+    <section class="hero">
+      <div class="container">
+        <span class="pill">Programmable plugin • No fluff, real workflows</span>
+        <h1>Turn your vault into a living system.<br/>Automations, dashboards, and docs—<em>your way</em>.</h1>
+        <p>I've used this setup for over a year to juggle research, product work, and family life. Below: a fast, interactive tour of what the plugin does and how it feels <strong>without installing anything</strong>.</p>
+        <div class="cta">
+          <a href="#demo" class="btn primary">▶ Try the Live Demo</a>
+          <a href="#download" class="btn">⬇ Get the Starter Vault</a>
+          <a href="#use-cases" class="btn ghost">📚 See Use Cases</a>
+        </div>
+        <div class="proof">
+          <div class="meter">⚡ Saves ~4–6 hrs/week</div>
+          <div class="meter">🧩 Works with Dataview</div>
+          <div class="meter">🛠️ Scriptable JS actions</div>
+        </div>
+        <div class="hero-visual card">
+          <!-- Replace with your animated GIF or screenshot from your vault -->
+          <img alt="Plugin screenshot" src="https://images.unsplash.com/photo-1555066931-4365d14bab8c?q=80&w=1400&auto=format&fit=crop" />
+        </div>
+      </div>
+    </section>
+
+    <!-- STORY -->
+    <section id="story">
+      <div class="container">
+        <h2>Why I built it</h2>
+        <p class="sub">I needed one keyboard-driven place to capture ideas, triage tasks, and spin up repeatable workflows in seconds—without leaving my notes.</p>
+        <div class="grid features" style="margin-top:18px;">
+          <div class="feature card">
+            <h3>Capture → Classify → Act</h3>
+            <p>Turn scribbles into structured items with frontmatter autofill and smart templates. No more copy/paste gymnastics.</p>
+          </div>
+          <div class="feature card">
+            <h3>Dataview superpowers</h3>
+            <p>Use your existing metadata to render boards, tables, and rollups. Keep notes markdown‑pure; let the views do the heavy lifting.</p>
+          </div>
+          <div class="feature card">
+            <h3>Programmable actions</h3>
+            <p>Attach small JS snippets to commands: file ops, link graphs, recurring reviews, outbound webhooks, and more.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- USE CASES -->
+    <section id="use-cases">
+      <div class="container">
+        <h2>Three quick wins</h2>
+        <p class="sub">Real vault patterns I use daily. Click a preset below the demo to load each scenario.</p>
+        <div class="grid features" style="margin-top:18px;">
+          <div class="feature card"><h3>Daily Control Center</h3><p>One page to see today’s meetings, tasks, and notes—auto‑generated at 6:00am.</p></div>
+          <div class="feature card"><h3>Project Tracker</h3><p>Dataview tables grouped by status, with review dates and owners auto‑calculated.</p></div>
+          <div class="feature card"><h3>Research Inbox</h3><p>Drop raw clippings; the plugin labels, links, and queues summaries for later.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- LIVE DEMO (Dataview‑ish) -->
+    <section id="demo">
+      <div class="container">
+        <h2>Live demo (no install)</h2>
+        <p class="sub">This simulates a Dataview‑style query on a mini dataset. Filter by tag and status; the table updates instantly. In your vault, the plugin wires these views to real notes and actions.</p>
+
+        <div class="demo-wrap">
+          <div class="card panel demo-controls">
+            <div class="row">
+              <div>
+                <label for="queryText">Search text</label>
+                <input id="queryText" type="text" placeholder="e.g. sprint, landlord, meeting" />
+              </div>
+              <div>
+                <label for="tagFilter">Tag</label>
+                <select id="tagFilter"><option value="">Any</option></select>
+              </div>
+            </div>
+            <div class="row">
+              <div>
+                <label for="statusFilter">Status</label>
+                <select id="statusFilter"><option value="">Any</option></select>
+              </div>
+              <div>
+                <label for="ownerFilter">Owner</label>
+                <select id="ownerFilter"><option value="">Any</option></select>
+              </div>
+            </div>
+            <div class="presets">
+              <button class="preset" data-preset="daily">▶ Daily Control Center</button>
+              <button class="preset" data-preset="projects">📊 Project Tracker</button>
+              <button class="preset" data-preset="research">🧠 Research Inbox</button>
+            </div>
+            <div class="callout" style="margin-top:12px;">
+              Tip: this is static HTML + JS. For your site, swap the sample dataset with JSON exported from your vault, or pre‑render views during your build.
+            </div>
+          </div>
+
+          <div class="card panel">
+            <div style="overflow:auto;">
+              <table id="results">
+                <thead>
+                  <tr><th>Title</th><th>Tags</th><th>Status</th><th>Owner</th><th>Due</th></tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- DOWNLOAD -->
+    <section id="download">
+      <div class="container">
+        <h2>Get the starter vault</h2>
+        <p class="sub">Download a fresh Obsidian vault with the plugin pre‑configured, example notes, and ready‑made views.</p>
+        <div class="card panel">
+          <ol>
+            <li><strong>Download:</strong> <a href="/downloads/obsidianplus-starter.zip">obsidianplus-starter.zip</a> (place the file in <code>~/Downloads</code> on your machine).</li>
+            <li><strong>Open in Obsidian:</strong> Unzip → “Open folder as vault”.</li>
+            <li><strong>Enable community plugins:</strong> Settings → Community Plugins → <em>On</em> → trust this vault.</li>
+            <li><strong>Start:</strong> Open <code>📌 Start Here.md</code> for a 2‑minute tour.</li>
+          </ol>
+          <p class="sub">Note: Obsidian Publish doesn’t run community plugins. This site simulates outputs; the vault runs the real thing.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container">
+      <div style="display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;align-items:center;">
+        <div>© <span id="year"></span> Obsidian+. Built with plain HTML+JS. No tracking by default.</div>
+        <div><a href="#" id="copyThemeBtn" class="pill">How to use my Obsidian theme →</a></div>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // === Dark mode: auto + toggle + persisted ===
+    (function() {
+      const root = document.documentElement;
+      const saved = localStorage.getItem('theme');
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      root.dataset.theme = saved || (prefersDark ? 'dark' : 'light');
+      document.getElementById('themeToggle').addEventListener('click', (e) => {
+        e.preventDefault();
+        root.dataset.theme = root.dataset.theme === 'dark' ? 'light' : 'dark';
+        localStorage.setItem('theme', root.dataset.theme);
+      });
+      window.addEventListener('keydown', (ev) => {
+        if ((ev.metaKey || ev.ctrlKey) && ev.key.toLowerCase() === 'd') {
+          root.dataset.theme = root.dataset.theme === 'dark' ? 'light' : 'dark';
+          localStorage.setItem('theme', root.dataset.theme);
+          ev.preventDefault();
+        }
+      });
+    })();
+
+    // === Demo dataset (replace with JSON exported from your vault) ===
+    const DATA = [
+      { title: 'Daily note — 2025-08-16', tags: ['daily','meeting'], status: 'Planned', owner: 'Maria', due: '2025-08-16' },
+      { title: 'Townhome project brief', tags: ['project','real-estate'], status: 'Active', owner: 'Maria', due: '2025-09-01' },
+      { title: 'HUD paperwork checklist', tags: ['project','ops'], status: 'Blocked', owner: 'Courtney', due: '2025-08-22' },
+      { title: 'Plugin roadmap Q3', tags: ['project','dev'], status: 'Active', owner: 'Maria', due: '2025-08-30' },
+      { title: 'Research — neurogenesis notes', tags: ['research'], status: 'Backlog', owner: 'Maria', due: '' },
+      { title: 'Landlord call notes', tags: ['daily','ops'], status: 'Done', owner: 'Maria', due: '2025-08-10' },
+      { title: 'Marketing ideas — launch', tags: ['marketing','project'], status: 'Active', owner: 'Alex', due: '2025-08-25' },
+      { title: 'Dataview query examples', tags: ['dev','docs'], status: 'Backlog', owner: 'Maria', due: '' },
+    ];
+
+    const els = {
+      query: document.getElementById('queryText'),
+      tag: document.getElementById('tagFilter'),
+      status: document.getElementById('statusFilter'),
+      owner: document.getElementById('ownerFilter'),
+      tbody: document.querySelector('#results tbody'),
+    };
+
+    function unique(arr) { return Array.from(new Set(arr)); }
+
+    function populateFilters() {
+      const tags = unique(DATA.flatMap(d => d.tags)).sort();
+      tags.forEach(t => { const o=document.createElement('option'); o.value=t; o.textContent=t; els.tag.appendChild(o); });
+      const statuses = unique(DATA.map(d => d.status)).sort();
+      statuses.forEach(s => { const o=document.createElement('option'); o.value=s; o.textContent=s; els.status.appendChild(o); });
+      const owners = unique(DATA.map(d => d.owner)).sort();
+      owners.forEach(o => { const opt=document.createElement('option'); opt.value=o; opt.textContent=o; els.owner.appendChild(opt); });
+    }
+
+    function matches(d, q) {
+      const txt = (d.title + ' ' + d.tags.join(' ')).toLowerCase();
+      return !q || txt.includes(q.toLowerCase());
+    }
+
+    function render() {
+      const q = els.query.value.trim();
+      const tag = els.tag.value;
+      const status = els.status.value;
+      const owner = els.owner.value;
+
+      const rows = DATA.filter(d =>
+        matches(d, q) && (!tag || d.tags.includes(tag)) && (!status || d.status === status) && (!owner || d.owner === owner)
+      ).map(d => `
+        <tr>
+          <td>${d.title}</td>
+          <td>${d.tags.map(t=>`<span class="badge">#${t}</span>`).join(' ')}</td>
+          <td><span class="badge">${d.status}</span></td>
+          <td>${d.owner}</td>
+          <td>${d.due || '—'}</td>
+        </tr>`).join('');
+
+      els.tbody.innerHTML = rows || `<tr><td colspan="5" style="color:var(--text-muted)">No results. Try widening your filters.</td></tr>`;
+    }
+
+    ['input','change'].forEach(evt => {
+      els.query.addEventListener(evt, render);
+      els.tag.addEventListener(evt, render);
+      els.status.addEventListener(evt, render);
+      els.owner.addEventListener(evt, render);
+    });
+
+    // Presets mimic 3 use cases
+    document.querySelectorAll('.preset').forEach(btn => btn.addEventListener('click', () => {
+      const p = btn.dataset.preset;
+      els.query.value = '';
+      els.tag.value = '';
+      els.status.value = '';
+      els.owner.value = '';
+      if (p === 'daily') { els.tag.value = 'daily'; }
+      if (p === 'projects') { els.tag.value = 'project'; els.status.value = 'Active'; }
+      if (p === 'research') { els.tag.value = 'research'; }
+      render();
+    }));
+
+    // Footer year
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    // Theme how-to
+    document.getElementById('copyThemeBtn').addEventListener('click', (e) => {
+      e.preventDefault();
+      alert(`To inherit your Obsidian theme:\n\n1) Open .obsidian/themes/<YourTheme>.css\n2) Copy the CSS variable block (e.g. :root { --background-primary: ... })\n3) Paste into this file's :root and :root[data-theme="dark"] sections.\n4) Save and refresh.`);
+    });
+
+    // Init
+    populateFilters();
+    render();
+  </script>
+</body>
+</html>
