@@ -6,6 +6,7 @@
   <title>Obsidian+ — Programmable Productivity, Your Way</title>
   <meta name="description" content="A programmable Obsidian plugin that turns your vault into a living system. See live demos, real use cases, and grab a starter vault pre‑configured in minutes." />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256'><path fill='%235960f1' d='M128 10 30 74v108l98 64 98-64V74z'/></svg>">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/codemirror.min.css">
   <style>
     /*
       ==============================
@@ -32,9 +33,9 @@
       --warning: #f59e0b;
       --danger:  #ef4444;
       --shadow: 0 8px 28px rgba(0,0,0,.08);
-      --radius-xl: 18px;
-      --radius-lg: 14px;
-      --radius-md: 10px;
+      --radius-xl: 12px;
+      --radius-lg: 8px;
+      --radius-md: 6px;
       --content-max: 1080px;
       --font-sans: ui-sans-serif, -apple-system, Segoe UI, Roboto, Inter, system-ui, "Helvetica Neue", Arial, "Apple Color Emoji", "Segoe UI Emoji";
       --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
@@ -66,10 +67,10 @@
     .btn { display: inline-flex; align-items: center; gap: 10px; padding: 12px 18px; border-radius: var(--radius-lg); border: 1px solid var(--border); background: var(--bg-secondary); box-shadow: var(--shadow); font-weight: 600; }
     .btn.primary { background: linear-gradient(180deg, var(--accent), var(--accent-strong)); color: white; border-color: transparent; }
     .btn.ghost { background: transparent; }
-    .pill { display: inline-flex; align-items: center; gap: 8px; padding: 6px 10px; border-radius: 999px; border: 1px solid var(--border); background: var(--bg-secondary); font-size: 12px; color: var(--text-muted); }
+    .pill { display: inline-flex; align-items: center; gap: 8px; padding: 6px 10px; border-radius: var(--radius-md); border: 1px solid var(--border); background: var(--bg-secondary); font-size: 12px; color: var(--text-muted); }
     .kbd { font-family: var(--font-mono); font-size: 12px; border: 1px solid var(--border); border-bottom-width: 3px; padding: 2px 6px; border-radius: 6px; background: var(--bg-secondary); }
     .card { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: var(--radius-xl); box-shadow: var(--shadow); }
-    .grid { display: grid; gap: 20px; }
+    .grid { display: grid; gap: 12px; }
 
     /* Nav */
     header { position: sticky; top: 0; z-index: 50; backdrop-filter: blur(10px); background: color-mix(in srgb, var(--bg-primary) 85%, transparent); border-bottom: 1px solid var(--border); }
@@ -103,20 +104,30 @@
     .feature p { margin: 0; color: var(--text-muted); }
 
     /* Demo */
-    .demo-wrap { display: grid; grid-template-columns: 360px 1fr; gap: 20px; }
-    .panel { padding: 18px; }
+    .demo-wrap { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .panel { padding: 12px; }
     .demo-controls .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
     .demo-controls label { font-size: 12px; color: var(--text-muted); display:block; margin-bottom:4px; }
     .demo-controls input, .demo-controls select { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 10px; background: var(--bg-secondary); color: var(--text-normal);
       box-shadow: inset 0 1px 0 rgba(0,0,0,.02); }
     .demo-controls .presets { display:flex; gap:8px; flex-wrap: wrap; margin-top: 8px; }
-    .preset { font-size: 12px; padding: 6px 10px; border: 1px dashed var(--border); border-radius: 999px; background: transparent; cursor: pointer; }
+    .preset { font-size: 12px; padding: 6px 10px; border: 1px dashed var(--border); border-radius: var(--radius-md); background: transparent; cursor: pointer; }
     .preset:hover { border-color: var(--accent); color: var(--accent); }
 
     table { width: 100%; border-collapse: collapse; }
     th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--border); font-size: 14px; }
     th { font-weight: 700; }
-    .badge { padding: 2px 8px; border-radius: 999px; font-size: 12px; border: 1px solid var(--border); }
+    .badge { padding: 2px 6px; border-radius: 6px; font-size: 12px; border: 1px solid var(--border); }
+
+    /* CodeMirror tweaks */
+    .CodeMirror { height: 360px; border:1px solid var(--border); border-radius: var(--radius-md); font-size:13px; }
+    .CodeMirror-line { position:relative; padding-left:1.2em; }
+    .CodeMirror-line:before { content:'\2022'; position:absolute; left:0; color:var(--text-muted); }
+    .cm-tag { color: var(--accent); font-weight:600; }
+
+    .note-list { list-style: disc; padding-left:20px; margin:0; }
+    .note-list li { margin-bottom:4px; }
+    .note-list .due { color: var(--text-muted); }
 
     /* Callouts */
     .callout { background: var(--callout-bg); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 14px 16px; }
@@ -212,16 +223,16 @@
     
         <div class="demo-wrap" style="align-items:start;">
           <!-- LEFT: Note editor -->
-          <div class="card panel" style="padding:16px;">
-            <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
-              <div style="font-weight:700;">Notes & Tasks (type here)</div>
-              <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <div class="card panel">
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;">
+              <div style="font-weight:700;">Notes (type here)</div>
+              <div style="display:flex;gap:6px;flex-wrap:wrap;">
                 <button class="preset" data-preset="daily">Daily preset</button>
                 <button class="preset" data-preset="project">Project preset</button>
                 <button class="preset" data-preset="music">Music preset</button>
               </div>
             </div>
-            <textarea id="noteInput" spellcheck="false" style="margin-top:10px;width:100%;height:360px;border:1px solid var(--border);border-radius:12px;background:var(--bg-secondary);color:var(--text-normal);padding:12px;font-family:var(--font-mono);font-size:13px;line-height:1.5;">#todo refresh passport 📅 2025-09-01
+            <textarea id="noteInput" spellcheck="false">#todo refresh passport 📅 2025-09-01
     #outreach respond to Julia from Easy Street Capital
     #waiting city to call back with status update
     #urgent get website up for Mary + Flow
@@ -229,35 +240,18 @@
     #music Stoic Serenity — Deep Future Garage https://www.youtube.com/watch?v=mW304P9EHgg
     #todo write video on notebook use
     #todo website up, chatgpt is fine</textarea>
-            <label style="display:flex;align-items:center;gap:8px;margin-top:10px;font-size:13px;color:var(--text-muted);">
+            <label style="display:flex;align-items:center;gap:6px;margin-top:8px;font-size:13px;color:var(--text-muted);">
               <input id="includePad" type="checkbox" checked style="accent-color:var(--accent);"> Add a few sample items from other notes (to simulate vault-wide rollups)
             </label>
-            <div class="callout" style="margin-top:10px;">
+            <div class="callout" style="margin-top:8px;">
               Tip: In your vault, the plugin reads actual notes (frontmatter + lines) and writes real views. This demo just shows the <em>feel</em> of the flow.
             </div>
           </div>
-    
-          <!-- RIGHT: Views -->
-          <div class="card panel" style="padding:0;">
-            <div style="padding:12px 12px 0;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
-              <div class="tabbar" style="display:flex;gap:6px;flex-wrap:wrap;">
-                <a href="#" class="pill viewTab" data-view="dashboard">Dashboard</a>
-                <a href="#" class="pill viewTab" data-view="tasks">Tasks</a>
-                <a href="#" class="pill viewTab" data-view="music">Music</a>
-              </div>
-              <div style="display:flex;gap:8px;align-items:center;">
-                <input id="globalSearch" type="text" placeholder="Search..." style="padding:10px 12px;border:1px solid var(--border);border-radius:10px;background:var(--bg-secondary);color:var(--text-normal);min-width:220px;">
-                <select id="statusFilter2" style="padding:10px 12px;border:1px solid var(--border);border-radius:10px;background:var(--bg-secondary);color:var(--text-normal);">
-                  <option value="">Any tag</option>
-                  <option value="todo">#todo</option>
-                  <option value="outreach">#outreach</option>
-                  <option value="waiting">#waiting</option>
-                  <option value="urgent">#urgent</option>
-                  <option value="music">#music</option>
-                </select>
-              </div>
-            </div>
-            <div id="viewContainer" style="padding:12px 12px 16px;"></div>
+
+          <!-- RIGHT: Preview -->
+          <div class="card panel">
+            <div style="font-weight:700;">Preview</div>
+            <div id="viewContainer" class="rendered-note" style="margin-top:8px;"></div>
           </div>
         </div>
       </div>
@@ -290,6 +284,8 @@
     </div>
   </footer>
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/codemirror.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/mode/markdown/markdown.min.js"></script>
   <script>
     // === Dark mode: auto + toggle + persisted ===
     (function() {
@@ -304,11 +300,21 @@
     })();
     
     // === Elements ===
-    const editorEl = document.getElementById('noteInput');
     const includePadEl = document.getElementById('includePad');
     const containerEl = document.getElementById('viewContainer');
-    const statusFilterEl = document.getElementById('statusFilter2');
-    const searchEl = document.getElementById('globalSearch');
+    const cm = CodeMirror.fromTextArea(document.getElementById('noteInput'), {
+      lineNumbers: false,
+      lineWrapping: true,
+      mode: 'markdown'
+    });
+    cm.addOverlay({
+      token: function(stream) {
+        if (stream.match(/#[A-Za-z0-9_-]+/)) return 'tag';
+        while (stream.next() != null && !stream.match(/#[A-Za-z0-9_-]+/, false)) {}
+        return null;
+      }
+    });
+    cm.on('change', render);
     
     // === Sample items to simulate vault-wide rollups ===
     const PAD_ITEMS = [
@@ -340,87 +346,30 @@
     }
     
     function currentItems(){
-      const base = parseLines(editorEl?.value);
+      const base = parseLines(cm.getValue());
       return includePadEl?.checked ? base.concat(PAD_ITEMS) : base;
     }
-    
-    function applyGlobalFilters(items){
-      const q = (searchEl?.value||'').toLowerCase();
-      const tag = statusFilterEl?.value || '';
-      return items.filter(it => (!q || (it.title.toLowerCase().includes(q) || it.tags.some(t=>t.includes(q)))) && (!tag || it.tags.includes(tag)));
+
+    function tagColor(str){
+      let h = 0;
+      for (let i = 0; i < str.length; i++) h = str.charCodeAt(i) + ((h << 5) - h);
+      return `hsl(${h % 360},70%,80%)`;
     }
-    
-    // === View renderers ===
-    function badge(text){ return `<span class="badge">${text}</span>`; }
-    
-    function renderDashboard(){
-      const items = applyGlobalFilters(currentItems());
-      const count = (t)=> items.filter(i=>i.tags.includes(t)).length;
-      const upcoming = items.filter(i=>i.view==='task' && i.due).sort((a,b)=>a.due.localeCompare(b.due)).slice(0,6);
-      return `
-        <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(220px,1fr));">
-          <div class="card" style="padding:14px;">⚙️ ${badge('#todo')} ${count('todo')} tasks</div>
-          <div class="card" style="padding:14px;">📣 ${badge('#outreach')} ${count('outreach')} items</div>
-          <div class="card" style="padding:14px;">⏳ ${badge('#waiting')} ${count('waiting')} waiting</div>
-          <div class="card" style="padding:14px;">🚨 ${badge('#urgent')} ${count('urgent')} urgent</div>
-        </div>
-        <div class="card" style="margin-top:14px;padding:14px;">
-          <div style="font-weight:700;margin-bottom:8px;">Upcoming</div>
-          <table style="width:100%;border-collapse:collapse;">
-            <thead><tr><th>Title</th><th>Tags</th><th>Due</th></tr></thead>
-            <tbody>
-              ${upcoming.map(i=>`<tr><td>${i.title}</td><td>${i.tags.map(t=>badge('#'+t)).join(' ')}</td><td>${i.due||'—'}</td></tr>`).join('') || `<tr><td colspan="3" style="color:var(--text-muted)">No upcoming items.</td></tr>`}
-            </tbody>
-          </table>
-        </div>`;
+
+    function badge(tag){
+      const clean = tag.replace('#','');
+      return `<span class="badge" style="background:${tagColor(clean)};">${tag}</span>`;
     }
-    
-    function renderTasks(){
-      const items = applyGlobalFilters(currentItems()).filter(i=>i.view==='task');
-      return `
-        <div class="card" style="padding:0;overflow:auto;">
-          <table style="width:100%;border-collapse:collapse;">
-            <thead><tr><th>Title</th><th>Tags</th><th>Due</th></tr></thead>
-            <tbody>
-              ${items.map(i=>`<tr><td>${i.title}</td><td>${i.tags.map(t=>badge('#'+t)).join(' ')}</td><td>${i.due||'—'}</td></tr>`).join('') || `<tr><td colspan="3" style="color:var(--text-muted)">No tasks match.</td></tr>`}
-            </tbody>
-          </table>
-        </div>`;
+
+    function render(){
+      if(!containerEl) return;
+      const items = currentItems();
+      containerEl.innerHTML = `<ul class="note-list">${
+        items.map(i=>`<li>${i.title} ${i.tags.map(t=>badge('#'+t)).join(' ')} ${i.due?`<span class="due">${i.due}</span>`:''}</li>`).join('')
+      }</ul>`;
     }
-    
-    function renderMusic(){
-      const items = applyGlobalFilters(currentItems()).filter(i=>i.view==='music');
-      items.sort((a,b)=> (b.due||'').localeCompare(a.due||''));
-      return `
-        <div class="card" style="padding:12px;">
-          ${items.map(i=>`
-            <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;border-bottom:1px solid var(--border);padding:8px 0;">
-              <div>
-                ${badge('#music')} <strong>${i.title}</strong> ${i.due?`<span style="color:var(--text-muted)">(${i.due})</span>`:''}
-              </div>
-              <div>
-                ${i.url?`<a href="${i.url}" target="_blank" rel="noopener">Open</a>`:''}
-              </div>
-            </div>
-          `).join('') || `<div style="color:var(--text-muted)">No music items yet. Add a line with <code>#music</code>.</div>`}
-        </div>`;
-    }
-    
-    const VIEWS = { dashboard: renderDashboard, tasks: renderTasks, music: renderMusic };
-    let currentView = 'dashboard';
-    
-    function render(){ if(!containerEl) return; containerEl.innerHTML = VIEWS[currentView](); highlightActiveTab(); }
-    
-    function highlightActiveTab(){
-      document.querySelectorAll('.viewTab').forEach(a=>{
-        if(a.dataset.view === currentView){ a.style.background = 'var(--bg-secondary)'; a.style.borderColor = 'var(--accent)'; a.style.color = 'var(--text-normal)'; }
-        else { a.style.background = 'transparent'; a.style.borderColor = 'var(--border)'; a.style.color = 'var(--text-muted)'; }
-      });
-    }
-    
-    // Events
-    document.querySelectorAll('.viewTab').forEach(a=>a.addEventListener('click', (e)=>{ e.preventDefault(); currentView = a.dataset.view; render(); }));
-    [editorEl, includePadEl, statusFilterEl, searchEl].forEach(el=> el && el.addEventListener('input', render));
+
+    if(includePadEl) includePadEl.addEventListener('input', render);
     
     // Presets
     const PRESETS = {
@@ -441,7 +390,7 @@
     #music Stoic Serenity — Deep Future Garage https://www.youtube.com/watch?v=mW304P9EHgg 📅 2025-04-06
     #music Sleepless | Deep Chill Music Mix https://www.youtube.com/watch?v=K6YVvQab0Ms 📅 2025-04-06`
     };
-    document.querySelectorAll('.preset').forEach(btn=>btn.addEventListener('click', ()=>{ const p = btn.dataset.preset; editorEl.value = PRESETS[p]||''; render(); }));
+    document.querySelectorAll('.preset').forEach(btn=>btn.addEventListener('click', ()=>{ const p = btn.dataset.preset; cm.setValue(PRESETS[p]||''); render(); }));
     
     // Footer year + theme how-to
     const yearEl = document.getElementById('year'); if(yearEl) yearEl.textContent = new Date().getFullYear();
