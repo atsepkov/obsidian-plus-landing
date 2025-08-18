@@ -147,7 +147,7 @@
     .chk[data-state="cancelled"]::after { content:'\2717'; position:absolute; top:-2px; left:2px; color:var(--danger); font-size:14px; }
 
     #notePanel { display:flex; flex-direction:column; height:520px; }
-    #previewPanel { height:480px; overflow:auto; }
+    #previewPanel { height:540px; overflow:auto; }
     #editorWrap { flex:1; min-height:400px; }
 
     /* .rendered-note {  } */
@@ -396,8 +396,8 @@ Document music that helps you focus:
 	+ check-out: [[2025-08-19]]
 + #payment Jordan Perkins: $2000 (Gmail sync)
 + #payment Maryann Cooper: $1385 (Plaid sync)
-	- note: will Zelle the rest by Monday
-		- [ ] #todo ping Maryann about remaining payment
+	-  said she will Zelle the rest by Monday
+		- [ ] #todo ping about remaining payment
 + #iot 5 Bow St: abnormal moisture levels under kitchen sink
         - [ ] #todo check kitchen sink for leaks
 + #iot 16 Pearl St: abnormally high electric usage (60kWh/day)
@@ -409,17 +409,30 @@ Document music that helps you focus:
         - [ ] #todo contact security`,
 
       'Project Note':
-`This page is dedicated to a specific project, it's not part of the daily notes. The content can be in whatever format you want, only tags you assign meaning to get interpreted.
 
-- [x] #todo apply for sprinkler permits ✅ 2025-08-10
-- [ ] #todo run electrical
-- [x] #pay $3500 (Mario, plumbing) ✅ 2025-08-17
-- [ ] #urgent extend building permit`,
+`# 41 Main St Rehab
+This page is dedicated to a specific project, it's not part of the daily notes. The content can be in whatever format you want, only tags you assign meaning to get interpreted.
+
+- 41 Main St Rehab:
+  - [x] #todo apply for sprinkler permits ✅ 2025-08-10
+  - [ ] #todo run electrical
+  - [x] #pay $3500 (Mario - plumbing) ✅ 2025-08-17
+  - [ ] #urgent extend building permit`,
+
       'Music Library':
-`- [ ] #music Smooth Driving Music — Deep Bass — Downtempo Car Mix 📅 2025-04-04
-- [ ] #music Productivity Music — Work With Bruce Wayne Mix 📅 2025-04-05
-- [ ] #music Nightwalker | Deep Chill Music Mix 📅 2025-04-06
-- [ ] #music Stoic Serenity — Deep Future Garage 📅 2025-04-06`
+`- #music Hypermind Music — Limitless Productivity Playlist
+	- https://www.youtube.com/watch?v=4MFOBeUCPkw
+	- coding, focus, chill
+  - ![[music_screenshot2.png]]
+- #music Night at Work | Instrumental Chill Music Mix
+	- https://www.youtube.com/watch?v=n9Y2Eb4BaSg
+	- optimistic, calm, focus
+	- ~8min: Audial - Silhouette
+  ![[music_screenshot3.png]]
+- #music Deadline Mode • Focus Beats to Crush Your To-Do List | Chillstep Mix
+	- https://www.youtube.com/watch?v=lwXCyKI845E
+	- relaxing, focus, ambient
+  - ![[music_screenshot4.png]]`
     };
     let currentNote = 'Daily Note';
     const noteTabs = document.querySelectorAll('.note-tab');
