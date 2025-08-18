@@ -475,10 +475,16 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
             let replaced = lineText.replace('#todo','#waiting');
             replaced = setLineState(replaced,'open');
             fromCM.replaceRange(replaced,{line:idx,ch:0},{line:idx,ch:lineText.length});
-            const targetLines = toCM.getValue().split(/\\r?\\n/);
+            const targetLines = toCM.getValue().split(/\r?\n/);
             targetLines.push(`+ [ ] #todo ${fromName}: ${task}`);
             context.forEach(c=>targetLines.push(c));
-            toCM.setValue(targetLines.join('\\n'));
+            toCM.setValue(targetLines.join('\n'));
+            requestAnimationFrame(()=>{
+              styleEditorTags(toCM);
+              styleBulletLines(toCM);
+              styleHeadings(toCM);
+              updateEditorWidgets(toCM);
+            });
             transfers.push({from:fromName,to:toName,task,contextLines:context.length});
           }
         };
@@ -585,6 +591,12 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
                     comments.forEach(c=>srcLines.splice(insertPos++,0,prefix+c));
                   }
                   cmFrom.setValue(srcLines.join('\n'));
+                  requestAnimationFrame(()=>{
+                    styleEditorTags(cmFrom);
+                    styleBulletLines(cmFrom);
+                    styleHeadings(cmFrom);
+                    updateEditorWidgets(cmFrom);
+                  });
                 }
                 t.sent = true;
               },400);
