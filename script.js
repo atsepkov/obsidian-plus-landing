@@ -225,11 +225,11 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
     };
 
     function tagStyles(str){
-      return TAG_COLORS[str] || { bg:'#94a3b8', fg:'#ffffff' };
+      return TAG_COLORS[str.toLowerCase()] || { bg:'#94a3b8', fg:'#ffffff' };
     }
 
     function badge(tag){
-      const clean = tag.replace('#','');
+      const clean = tag.replace('#','').toLowerCase();
       const {bg,fg} = tagStyles(clean);
       return `<span class="badge" style="background:${bg};color:${fg};">${tag}</span>`;
     }
@@ -259,7 +259,7 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
     function styleEditorTags(inst){
       const tags = inst.getWrapperElement().querySelectorAll('.cm-tag');
       tags.forEach(el=>{
-        const clean = el.textContent.replace('#','').toLowerCase();
+        const clean = el.textContent.replace('#','');
         const {bg,fg} = tagStyles(clean);
         el.style.background = bg;
         el.style.color = fg;
@@ -329,7 +329,7 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
       });
       inst.addOverlay(overlay);
       const refresh = ()=>{ styleEditorTags(inst); styleBulletLines(inst); styleHeadings(inst); updateEditorWidgets(inst); matchHeights(inst, wrapId); };
-      inst.on('change', ()=>requestAnimationFrame(refresh));
+      inst.on('change', refresh);
       inst.on('viewportChange', refresh);
       refresh();
       return inst;
@@ -529,9 +529,9 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
         };
       }
 
-      function makeCompleter(fromLogCM, toDailyCM, fromName, toName){
+      function makeCompleter(fromLogCM, toDailyCM, originName, recipientName){
         return function(lineText, idx){
-          const re = new RegExp(`^\\+\\s*\\[(x|-)\\]\\s*#todo\\s+from\\s+${fromName}:\\s*(.+?)(?:\\s*(?:✅|❌)\\s*202[4-9]-[01]\\d-[0-3]\\d)?$`, 'i');
+          const re = new RegExp(`^\\+\\s*\\[(x|-)\\]\\s*#todo\\s+from\\s+${originName}:\\s*(.+?)(?:\\s*(?:✅|❌)\\s*202[4-9]-[01]\\d-[0-3]\\d)?$`, 'i');
           const m = lineText.match(re);
           if(m && m[1] !== ' '){
             const task = m[2].trim();
@@ -540,7 +540,7 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
             fromLogCM.replaceRange(doneLine,{line:idx,ch:0},{line:idx,ch:lineText.length});
             const targetLines = toDailyCM.getValue().split(/\r?\n/);
             for(let j=0;j<targetLines.length;j++){
-              if(targetLines[j].includes(`#waiting ${fromName}:`) && targetLines[j].includes(task)){
+              if(targetLines[j].includes(`#waiting ${recipientName}:`) && targetLines[j].includes(task)){
                 const parentIndent = (targetLines[j].match(/^\s*/) || ['',''])[0];
                 targetLines[j] = setLineState(targetLines[j],'done');
                 const prefixed = context.map(l=>parentIndent + l);
@@ -554,8 +554,8 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
               matchHeights(fromLogCM, fromLogCM.getTextArea().parentElement.id);
               styleEditorTags(toDailyCM); styleBulletLines(toDailyCM); styleHeadings(toDailyCM); updateEditorWidgets(toDailyCM);
               matchHeights(toDailyCM, toDailyCM.getTextArea().parentElement.id);
-              updateMiniDash(fromName);
-              updateMiniDash(toName);
+              updateMiniDash(originName);
+              updateMiniDash(recipientName);
             });
           }
         };
@@ -605,8 +605,8 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
 
       const sendFromAlice = makeSender(cmAliceDaily, cmBobLog, 'Alice', 'Bob');
       const sendFromBob = makeSender(cmBobDaily, cmAliceLog, 'Bob', 'Alice');
-      const completeFromBob = makeCompleter(cmBobLog, cmAliceDaily, 'Bob', 'Alice');
-      const completeFromAlice = makeCompleter(cmAliceLog, cmBobDaily, 'Alice', 'Bob');
+      const completeFromBob = makeCompleter(cmBobLog, cmAliceDaily, 'Alice', 'Bob');
+      const completeFromAlice = makeCompleter(cmAliceLog, cmBobDaily, 'Bob', 'Alice');
       setupCheckbox(cmAliceDaily, sendFromAlice);
       setupCheckbox(cmBobDaily, sendFromBob);
       setupCheckbox(cmAliceLog, completeFromAlice);
@@ -642,8 +642,8 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
         const dash = document.getElementById(person==='Alice'? 'aliceDash':'bobDash');
         const body = dash.querySelector('.dash-body');
         const items = [
-          ...collectFromNote(person+" Daily", daily.getValue()),
-          ...collectFromNote(person+" Log", log.getValue())
+          ...collectFromNote('Daily Note', daily.getValue()),
+          ...collectFromNote('Transaction Log', log.getValue())
         ].filter(i=>i.tags.some(t=>t==='todo'||t==='waiting'));
         body.innerHTML = `<table><tbody>${items.map(i=>`<tr class="item ${bulletClass(i.bullet)}${i.status==='done'?' done':''}${i.status==='cancelled'?' cancelled':''}" data-note="${i.source}"><td>${renderMainLine(i)}</td></tr>${i.children.length?`<tr class="details"><td><ul>${i.children.map(renderChildLine).join('')}</ul></td></tr>`:''}`).join('')}</tbody></table>`;
         const totalEl = dash.querySelector('.count-total');
