@@ -259,7 +259,7 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
     function styleEditorTags(inst){
       const tags = inst.getWrapperElement().querySelectorAll('.cm-tag');
       tags.forEach(el=>{
-        const clean = el.textContent.replace('#','');
+        const clean = el.textContent.replace('#','').toLowerCase();
         const {bg,fg} = tagStyles(clean);
         el.style.background = bg;
         el.style.color = fg;
@@ -531,7 +531,7 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
 
       function makeCompleter(fromLogCM, toDailyCM, fromName, toName){
         return function(lineText, idx){
-          const re = new RegExp(`^\\+\\s*\\[(x|-)\\]\\s*#todo\\s+from\\s+${fromName}:\\s*(.+)`, 'i');
+          const re = new RegExp(`^\\+\\s*\\[(x|-)\\]\\s*#todo\\s+from\\s+${fromName}:\\s*(.+?)(?:\\s*(?:✅|❌)\\s*202[4-9]-[01]\\d-[0-3]\\d)?$`, 'i');
           const m = lineText.match(re);
           if(m && m[1] !== ' '){
             const task = m[2].trim();
