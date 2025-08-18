@@ -146,9 +146,9 @@
     .chk[data-state="done"]::after { content:'\2713'; position:absolute; top:-2px; left:2px; color:var(--success); font-size:14px; }
     .chk[data-state="cancelled"]::after { content:'\2717'; position:absolute; top:-2px; left:2px; color:var(--danger); font-size:14px; }
 
-    #notePanel { display:flex; flex-direction:column; height:460px; }
-    #previewPanel { height:420px; overflow:auto; }
-    #editorWrap { flex:1; min-height:360px; }
+    #notePanel { display:flex; flex-direction:column; height:520px; }
+    #previewPanel { height:480px; overflow:auto; }
+    #editorWrap { flex:1; min-height:400px; }
 
     /* .rendered-note {  } */
     .card table { margin-bottom: 5px; }
@@ -399,10 +399,14 @@ Document music that helps you focus:
 	- note: will Zelle the rest by Monday
 		- [ ] #todo ping Maryann about remaining payment
 + #iot 5 Bow St: abnormal moisture levels under kitchen sink
-	- [ ] #todo check kitchen sink for leaks
+        - [ ] #todo check kitchen sink for leaks
 + #iot 16 Pearl St: abnormally high electric usage (60kWh/day)
-	- probably AC
-* #iot 5 Bow St: lightbulb offline (rear hallway)`,
+        - probably AC
+* #iot 5 Bow St: lightbulb offline (rear hallway)
++ #iot 22 Oak Ridge: basement humidity 80%
+        - [ ] #todo inspect dehumidifier
++ #iot 10 Market St: front door left ajar
+        - [ ] #todo contact security`,
 
       'Project Note':
 `This page is dedicated to a specific project, it's not part of the daily notes. The content can be in whatever format you want, only tags you assign meaning to get interpreted.
@@ -454,26 +458,31 @@ Document music that helps you focus:
 
     function collectFromNote(name, text){
       const out = [];
-      function walk(nodes){
+      function walk(nodes, ctx){
         nodes.forEach(n=>{
+          const nextCtx = n.text.includes(':') ? n.text.split(':')[0].trim() : ctx;
           const children = n.children.filter(c=>!c.tags.length);
+          let title = n.text;
+          if(ctx && n.tags.some(t=>t==='todo' || t==='urgent')){
+            title = `${ctx}: ${title}`;
+          }
           if(n.tags.length){
             out.push({
-              title:n.text,
+              title,
               tags:n.tags,
               due:n.due,
               url:n.url,
               status:n.status,
               line:n.line,
-              view:n.tags.includes('music') ? 'music' : (n.tags.some(t=>t==='payment' || t==='pay') ? 'transaction' : 'task'),
+              view:n.tags.includes('music') ? 'music' : (n.tags.includes('iot') ? 'monitoring' : (n.tags.some(t=>t==='payment' || t==='pay') ? 'payment' : 'task')),
               source:name,
               children
             });
           }
-          if(n.children.length) walk(n.children);
+          if(n.children.length) walk(n.children, nextCtx);
         });
       }
-      walk(parseTree(text));
+      walk(parseTree(text), '');
       return out;
     }
 
@@ -551,9 +560,10 @@ Document music that helps you focus:
       if(!containerEl) return;
       const items = currentItems();
       const todos = items.filter(i=>i.view === 'task' && i.tags.some(t=>t==='todo' || t==='urgent'));
-      const transactions = items.filter(i=>i.view === 'transaction');
+      const payments = items.filter(i=>i.view === 'payment');
       const music = items.filter(i=>i.view === 'music');
-      containerEl.innerHTML = tableHTML('Todos', todos) + tableHTML('Transactions', transactions) + tableHTML('Music', music);
+      const monitoring = items.filter(i=>i.view === 'monitoring');
+      containerEl.innerHTML = tableHTML('Todos', todos) + tableHTML('Payments', payments) + tableHTML('Music', music) + tableHTML('Monitoring', monitoring);
       containerEl.querySelectorAll('tr.item').forEach(row=>{
         row.addEventListener('click',()=>{
           const next = row.nextElementSibling;
@@ -585,7 +595,7 @@ Document music that helps you focus:
       currentNote = name;
       noteTabs.forEach(b=>b.classList.toggle('active', b.dataset.note===name));
       cm.setValue(NOTES[name]||'');
-      render();
+      requestAnimationFrame(render);
     }
 
     noteTabs.forEach(btn=>btn.addEventListener('click',()=>loadNote(btn.dataset.note)));
