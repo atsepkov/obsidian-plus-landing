@@ -73,7 +73,7 @@
 
     /* Hero */
     .hero { padding: 72px 0 36px; position: relative; }
-    .hero h1 { font-size: clamp(28px, 5vw, 44px); line-height: 1.1; margin: 0 0 14px; }
+    .hero h1 { font-size: clamp(28px, 5vw, 44px); line-height: 1.1; margin: 14px 0; }
     .hero p { font-size: clamp(16px, 2.2vw, 18px); color: var(--text-muted); margin: 0 0 26px; }
     .hero .cta { display: flex; gap: 12px; flex-wrap: wrap; }
     .hero-visual { margin-top: 28px; border-radius: var(--radius-xl); overflow: hidden; border: 1px solid var(--border); box-shadow: var(--shadow); }
@@ -93,6 +93,16 @@
     .feature { padding: 18px; }
     .feature h3 { margin: 0 0 4px; font-size: 18px; }
     .feature p { margin: 0; color: var(--text-muted); }
+
+    .download-form input {
+      flex:1;
+      padding:10px 12px;
+      border:1px solid var(--border);
+      border-radius:var(--radius-md);
+      background:var(--bg-secondary);
+      color:var(--text-normal);
+    }
+    .download-form .btn { padding:10px 16px; }
 
     /* Demo */
     .demo-wrap { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }

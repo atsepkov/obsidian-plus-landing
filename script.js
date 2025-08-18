@@ -124,7 +124,7 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
     const noteTabs = document.querySelectorAll('.note-tab');
     const SCENARIO_DESCS = {
       dashboard: "Jordan manages several rentals. He spends a lot of time on the go, with his phone. He's a big proponent of GTD, but struggled to implement it in an electronic form. No tool was flexible enough, and most fell apart if system wasn't followed religiously. With Obsidian+, the data organizes itself. Now his daily notes are his inbox basket. His properties are his projects, marking something with a tag flags it important, everything else becomes reference. Jordan can quickly see who paid the rent and if there is a water leak. Problems surface to the top before they become emergencies.",
-      handoff: 'Alice and Bob are coworkers using connected notebooks to pass tasks. Send items from Alice\'s note to Bob and see updates flow back.'
+      handoff: 'Alice and Bob are coworkers using linked notebooks to pass tasks in both directions. Send items between their notes and watch responses flow back.'
     };
     scenarioDescEl.textContent = SCENARIO_DESCS.dashboard;
     scenarioTabs.forEach(tab=>{
@@ -447,32 +447,35 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
       const cmAlice = initEditor('aliceInput', 'aliceEditorWrap');
       const cmBob = initEditor('bobInput', 'bobEditorWrap');
       cmAlice.setValue(`# Alice Daily Note\n- [ ] #todo Bob: prepare Q3 report\n  - gather metrics from CRM`);
-      cmBob.setValue(`# Bob Daily Log`);
+      cmBob.setValue(`# Bob Daily Log\n- [ ] #todo Alice: verify vendor invoices`);
       const transfers = [];
 
-      function maybeSend(lineText, idx){
-        const m = lineText.match(/^([-+*])\s*\[(x|-| )\]\s*#todo\s+Bob:\s*(.+)/i);
-        if(m && m[2] !== ' '){
-          const task = m[3].trim();
-          const indent = lineText.match(/^(\s*)/)[1];
-          const aliceLines = cmAlice.getValue().split(/\r?\n/);
-          const context = [];
-          for(let i=idx+1;i<aliceLines.length;i++){
-            const l = aliceLines[i];
-            const ind = l.match(/^(\s*)/)[1];
-            if(ind.length <= indent.length) break;
-            const ctext = l.trim().replace(/^[-+*]/,'+');
-            context.push('  '+ctext);
+      function makeSender(fromCM, toCM, fromName, toName){
+        return function(lineText, idx){
+          const re = new RegExp(`^([-+*])\\s*\\[(x|-| )\\]\\s*#todo\\s+${toName}:\\s*(.+)`, 'i');
+          const m = lineText.match(re);
+          if(m && m[2] !== ' '){
+            const task = m[3].trim();
+            const indent = lineText.match(/^(\\s*)/)[1];
+            const lines = fromCM.getValue().split(/\\r?\\n/);
+            const context = [];
+            for(let i=idx+1;i<lines.length;i++){
+              const l = lines[i];
+              const ind = l.match(/^(\\s*)/)[1];
+              if(ind.length <= indent.length) break;
+              const ctext = l.trim().replace(/^[-+*]/,'+');
+              context.push('  '+ctext);
+            }
+            let replaced = lineText.replace('#todo','#waiting');
+            replaced = setLineState(replaced,'open');
+            fromCM.replaceRange(replaced,{line:idx,ch:0},{line:idx,ch:lineText.length});
+            const targetLines = toCM.getValue().split(/\\r?\\n/);
+            targetLines.push(`+ [ ] #todo ${fromName}: ${task}`);
+            context.forEach(c=>targetLines.push(c));
+            toCM.setValue(targetLines.join('\\n'));
+            transfers.push({from:fromName,to:toName,task,contextLines:context.length});
           }
-          let replaced = lineText.replace('#todo','#waiting');
-          replaced = setLineState(replaced,'open');
-          cmAlice.replaceRange(replaced, {line:idx, ch:0}, {line:idx, ch:lineText.length});
-          const bobLines = cmBob.getValue().split(/\r?\n/);
-          bobLines.push(`+ [ ] #todo Alice: ${task}`);
-          context.forEach(c=>bobLines.push(c));
-          cmBob.setValue(bobLines.join('\n'));
-          transfers.push({task, contextLines:context.length});
-        }
+        };
       }
 
       function setupCheckbox(inst, cb){
@@ -517,8 +520,10 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
         refresh();
       }
 
-      setupCheckbox(cmAlice, maybeSend);
-      setupCheckbox(cmBob, null);
+      const sendFromAlice = makeSender(cmAlice, cmBob, 'Alice', 'Bob');
+      const sendFromBob = makeSender(cmBob, cmAlice, 'Bob', 'Alice');
+      setupCheckbox(cmAlice, sendFromAlice);
+      setupCheckbox(cmBob, sendFromBob);
 
       cmBob.addKeyMap({
         Enter: function(cm){
@@ -538,45 +543,52 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
         }
       });
 
-      cmBob.on('change', ()=>{
-        const bobLines = cmBob.getValue().split(/\r?\n/);
-        transfers.forEach(t=>{
-          if(t.sent) return;
-          const idx = bobLines.findIndex(line=>line.includes(`#todo Alice:`) && line.includes(t.task));
-          if(idx===-1) return;
-          const line = bobLines[idx];
-          const statusChar = (line.match(/\[( |x|-)\]/)||[])[1]||' ';
-          const status = statusChar==='x'?'done':statusChar==='-'?'cancelled':'open';
-          if(status!=='open'){
-            clearTimeout(t.timer);
-            t.timer = setTimeout(()=>{
-              const indent = line.match(/^\s*/)[0].length;
-              let comments=[];
-              for(let i=idx+1;i<bobLines.length;i++){
-                const l = bobLines[i];
-                const ind = l.match(/^\s*/)[0].length;
-                if(ind<=indent) break;
-                comments.push(l.trim().replace(/^[-+*]/,'+'));
-              }
-              comments = comments.slice(t.contextLines||0);
-              const aliceLines = cmAlice.getValue().split(/\r?\n/);
-              let aidx = aliceLines.findIndex(l=>l.includes('#waiting') && l.includes(t.task));
-              if(aidx!==-1){
-                aliceLines[aidx] = setLineState(aliceLines[aidx], status);
-                const baseIndent = aliceLines[aidx].match(/^\s*/)[0];
-                let insertPos = aidx+1;
-                while(insertPos<aliceLines.length && aliceLines[insertPos].match(/^\s*/)[0].length>baseIndent.length) insertPos++;
-                if(comments.length){
-                  const prefix = baseIndent+'  ';
-                  comments.forEach(c=>aliceLines.splice(insertPos++,0,prefix+c));
+      function watchResponses(from, to){
+        const cmFrom = from==='Alice'?cmAlice:cmBob;
+        const cmTo = from==='Alice'?cmBob:cmAlice;
+        cmTo.on('change', ()=>{
+          const lines = cmTo.getValue().split(/\r?\n/);
+          transfers.forEach(t=>{
+            if(t.sent || t.from!==from || t.to!==to) return;
+            const idx = lines.findIndex(line=>line.includes(`#todo ${from}:`) && line.includes(t.task));
+            if(idx===-1) return;
+            const line = lines[idx];
+            const statusChar = (line.match(/\[( |x|-)\]/)||[])[1]||' ';
+            const status = statusChar==='x'?'done':statusChar==='-'?'cancelled':'open';
+            if(status!=='open'){
+              clearTimeout(t.timer);
+              t.timer = setTimeout(()=>{
+                const indent = line.match(/^\s*/)[0].length;
+                let comments=[];
+                for(let i=idx+1;i<lines.length;i++){
+                  const l = lines[i];
+                  const ind = l.match(/^\s*/)[0].length;
+                  if(ind<=indent) break;
+                  comments.push(l.trim().replace(/^[-+*]/,'+'));
                 }
-                cmAlice.setValue(aliceLines.join('\n'));
-              }
-              t.sent = true;
-            },400);
-          }
+                comments = comments.slice(t.contextLines||0);
+                const srcLines = cmFrom.getValue().split(/\r?\n/);
+                let sidx = srcLines.findIndex(l=>l.includes('#waiting') && l.includes(t.task));
+                if(sidx!==-1){
+                  srcLines[sidx] = setLineState(srcLines[sidx], status);
+                  const baseIndent = srcLines[sidx].match(/^\s*/)[0];
+                  let insertPos = sidx+1;
+                  while(insertPos<srcLines.length && srcLines[insertPos].match(/^\s*/)[0].length>baseIndent.length) insertPos++;
+                  if(comments.length){
+                    const prefix = baseIndent+'  ';
+                    comments.forEach(c=>srcLines.splice(insertPos++,0,prefix+c));
+                  }
+                  cmFrom.setValue(srcLines.join('\n'));
+                }
+                t.sent = true;
+              },400);
+            }
+          });
         });
-      });
+      }
+
+      watchResponses('Alice','Bob');
+      watchResponses('Bob','Alice');
     }
 
     // Footer year + theme how-to
