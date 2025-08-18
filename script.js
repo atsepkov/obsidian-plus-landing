@@ -123,7 +123,7 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
     let currentScenario = 'dashboard';
     let NOTES = JSON.parse(JSON.stringify(SCENARIOS[currentScenario]));
     let currentNote = 'Daily Note';
-    const noteTabs = document.querySelectorAll('.note-tab');
+    const noteTabs = document.querySelectorAll('.note-tab[data-note]');
     const SCENARIO_DESCS = {
       dashboard: "Jordan manages several rentals. He spends a lot of time on the go, with his phone. He's a big proponent of GTD, but struggled to implement it in an electronic form. No tool was flexible enough, and most fell apart if system wasn't followed religiously. With Obsidian+, the data organizes itself. Now his daily notes are his inbox basket. His properties are his projects, marking something with a tag flags it important, everything else becomes reference. Jordan can quickly see who paid the rent and if there is a water leak. Problems surface to the top before they become emergencies.",
       handoff: 'Alice and Bob are coworkers sharing linked notebooks. Check a #todo with your teammate\'s name to send it to their Transaction Log so nothing falls through the cracks.'
@@ -327,7 +327,7 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
       });
       inst.addOverlay(overlay);
       const refresh = ()=>{ styleEditorTags(inst); styleBulletLines(inst); styleHeadings(inst); updateEditorWidgets(inst); matchHeights(inst, wrapId); };
-      inst.on('change', refresh);
+      inst.on('change', ()=>requestAnimationFrame(refresh));
       inst.on('viewportChange', refresh);
       refresh();
       return inst;
@@ -501,7 +501,7 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
               const l = lines[i];
               const ind = (l.match(/^(\\s*)/) || ['',''])[1];
               if(ind.length <= indent.length) break;
-              const ctext = l.trim().replace(/^[-+*]/,'+');
+              const ctext = l.trim();
               context.push('  '+ctext);
             }
             let replaced = lineText.replace('#todo','#waiting');
@@ -510,6 +510,42 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
             appendToLog(toLogCM, [`+ [ ] #todo ${fromName}: ${task}`, ...context], toName);
             if(toName==='Bob') { bobLogCount++; updateBadge('Bob'); }
             else { aliceLogCount++; updateBadge('Alice'); }
+          }
+        };
+      }
+
+      function makeCompleter(fromLogCM, toDailyCM, fromName, toName){
+        return function(lineText, idx){
+          const re = new RegExp(`^\\+\\s*\\[(x|-)\\]\\s*#todo\\s+${toName}:\\s*(.+)`, 'i');
+          const m = lineText.match(re);
+          if(m && m[1] !== ' '){
+            const task = m[2].trim();
+            const indent = (lineText.match(/^(\\s*)/) || ['',''])[1];
+            const lines = fromLogCM.getValue().split(/\\r?\\n/);
+            const context = [];
+            for(let i=idx+1;i<lines.length;i++){
+              const l = lines[i];
+              const ind = (l.match(/^(\\s*)/) || ['',''])[1];
+              if(ind.length <= indent.length) break;
+              const ctext = l.trim().replace(/^[-+*]/,'+');
+              context.push('  '+ctext);
+            }
+            const doneLine = setLineState(lineText,'done');
+            fromLogCM.replaceRange(doneLine,{line:idx,ch:0},{line:idx,ch:lineText.length});
+            const targetLines = toDailyCM.getValue().split(/\\r?\\n/);
+            for(let j=0;j<targetLines.length;j++){
+              if(targetLines[j].includes(`#waiting ${fromName}:`) && targetLines[j].includes(task)){
+                targetLines[j] = setLineState(targetLines[j],'done');
+                targetLines.splice(j+1,0,...context);
+                break;
+              }
+            }
+            toDailyCM.setValue(targetLines.join('\n'));
+            requestAnimationFrame(()=>{
+              styleEditorTags(toDailyCM); styleBulletLines(toDailyCM); styleHeadings(toDailyCM); updateEditorWidgets(toDailyCM);
+              matchHeights(toDailyCM, toDailyCM.getTextArea().parentElement.id);
+              updateMiniDash(toName);
+            });
           }
         };
       }
@@ -558,10 +594,12 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
 
       const sendFromAlice = makeSender(cmAliceDaily, cmBobLog, 'Alice', 'Bob');
       const sendFromBob = makeSender(cmBobDaily, cmAliceLog, 'Bob', 'Alice');
+      const completeFromBob = makeCompleter(cmBobLog, cmAliceDaily, 'Bob', 'Alice');
+      const completeFromAlice = makeCompleter(cmAliceLog, cmBobDaily, 'Alice', 'Bob');
       setupCheckbox(cmAliceDaily, sendFromAlice);
       setupCheckbox(cmBobDaily, sendFromBob);
-      setupCheckbox(cmAliceLog);
-      setupCheckbox(cmBobLog);
+      setupCheckbox(cmAliceLog, completeFromAlice);
+      setupCheckbox(cmBobLog, completeFromBob);
 
       function addEnterKey(cm){
         cm.addKeyMap({
@@ -584,6 +622,8 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
       }
       addEnterKey(cmAliceDaily);
       addEnterKey(cmBobDaily);
+      addEnterKey(cmAliceLog);
+      addEnterKey(cmBobLog);
 
       function updateMiniDash(person){
         const daily = person==='Alice'? cmAliceDaily : cmBobDaily;
