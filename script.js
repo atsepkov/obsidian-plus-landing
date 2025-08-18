@@ -124,7 +124,7 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
     const noteTabs = document.querySelectorAll('.note-tab');
     const SCENARIO_DESCS = {
       dashboard: "Jordan manages several rentals. He spends a lot of time on the go, with his phone. He's a big proponent of GTD, but struggled to implement it in an electronic form. No tool was flexible enough, and most fell apart if system wasn't followed religiously. With Obsidian+, the data organizes itself. Now his daily notes are his inbox basket. His properties are his projects, marking something with a tag flags it important, everything else becomes reference. Jordan can quickly see who paid the rent and if there is a water leak. Problems surface to the top before they become emergencies.",
-      handoff: 'Alice and Bob are coworkers handing off tasks. Send items from Alice\'s note to Bob and see updates flow back.'
+      handoff: 'Alice and Bob are coworkers using connected notebooks to pass tasks. Send items from Alice\'s note to Bob and see updates flow back.'
     };
     scenarioDescEl.textContent = SCENARIO_DESCS.dashboard;
     scenarioTabs.forEach(tab=>{

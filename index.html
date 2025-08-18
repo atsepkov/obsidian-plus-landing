@@ -121,8 +121,8 @@
       <div class="container">
         <h2>Live demo</h2>
         <div class="scenario-tabs" style="margin-bottom:8px;">
-          <button class="scenario-tab active" data-scenario="dashboard">Notes → Dashboard</button>
-          <button class="scenario-tab" data-scenario="handoff">Alice ↔ Bob</button>
+          <button class="scenario-tab active" data-scenario="dashboard">Individual Notebook</button>
+          <button class="scenario-tab" data-scenario="handoff">Connected Notebooks</button>
         </div>
         <p id="scenarioDesc" class="sub"></p>
 
@@ -171,15 +171,26 @@
     <section id="download">
       <div class="container">
         <h2>Get the starter vault</h2>
-        <p class="sub">Download a fresh Obsidian vault with the plugin pre‑configured, example notes, and ready‑made views.</p>
-        <div class="card panel">
-          <ol>
-            <li><strong>Download:</strong> <a href="/downloads/obsidianplus-starter.zip">obsidianplus-starter.zip</a> (place the file in <code>~/Downloads</code> on your machine).</li>
-            <li><strong>Open in Obsidian:</strong> Unzip → “Open folder as vault”.</li>
-            <li><strong>Enable community plugins:</strong> Settings → Community Plugins → <em>On</em> → trust this vault.</li>
-            <li><strong>Start:</strong> Open <code>📌 Start Here.md</code> for a 2‑minute tour.</li>
-          </ol>
-          <p class="sub">Note: Obsidian Publish doesn’t run community plugins. This site simulates outputs; the vault runs the real thing.</p>
+        <p class="sub">Pick the setup that fits—solo or team.</p>
+        <div class="grid features" style="margin-top:18px;">
+          <div class="feature card">
+            <h3>Individual Notebook</h3>
+            <p>Grab a personal vault pre-configured with Obsidian+.</p>
+            <form class="download-form" onsubmit="return false;" style="display:flex;gap:8px;flex-wrap:wrap;">
+              <input type="email" placeholder="you@example.com" required>
+              <button class="btn primary">Get Download</button>
+            </form>
+          </div>
+          <div class="feature card">
+            <h3>Team Notebook (10 syncing notebooks)</h3>
+            <ul>
+              <li>Digitize or convert existing SOPs</li>
+              <li>On-site staff member to set up automations</li>
+              <li>Team collaboration</li>
+              <li>24/7 support</li>
+            </ul>
+            <p>Contact us: <a href="mailto:team@obsidianpl.us">team@obsidianpl.us</a></p>
+          </div>
         </div>
       </div>
     </section>
