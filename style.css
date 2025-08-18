@@ -184,11 +184,19 @@
     .cm-bullet-star { color:#ef4444 !important; }
     .cm-bullet-dash { color:var(--text-normal); }
 
-    .chk {
+.chk {
       display:inline-block; width:16px; height:16px; border:1px solid var(--border); border-radius:4px; cursor:pointer; position:relative; vertical-align:middle;
     }
     .chk[data-state="done"]::after { content:'\2713'; position:absolute; top:-2px; left:2px; color:var(--success); font-size:14px; }
-    .chk[data-state="cancelled"]::after { content:'\2717'; position:absolute; top:-2px; left:2px; color:var(--danger); font-size:14px; }
+.chk[data-state="cancelled"]::after { content:'\2717'; position:absolute; top:-2px; left:2px; color:var(--danger); font-size:14px; }
+
+.cm-hover-checkbox {
+  position:absolute;
+  width:16px;
+  height:16px;
+  display:none;
+  cursor:pointer;
+}
 
     #notePanel, #alicePanel, #bobPanel { display:flex; flex-direction:column; height:520px; }
     #previewPanel { height:540px; overflow:auto; }

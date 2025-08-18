@@ -486,6 +486,46 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
       }
 
       function setupCheckbox(inst, cb){
+        const wrapper = inst.getWrapperElement();
+        const hover = document.createElement('input');
+        hover.type = 'checkbox';
+        hover.className = 'cm-hover-checkbox';
+        wrapper.appendChild(hover);
+
+        function hide(){ hover.style.display = 'none'; }
+        wrapper.addEventListener('mouseleave', hide);
+        inst.on('scroll', hide);
+
+        hover.addEventListener('mousedown', ev => {
+          ev.preventDefault();
+          const pos = hover._pos;
+          const line = inst.getLine(pos.line);
+          const idx = line.indexOf('[');
+          const state = line[idx+1];
+          const next = state===' ' ? 'x' : (state==='x' ? '-' : ' ');
+          const newLine = line.slice(0,idx+1)+next+line.slice(idx+2);
+          inst.replaceRange(newLine, {line:pos.line, ch:0}, {line:pos.line, ch:line.length});
+          hide();
+          if(cb) cb(newLine, pos.line);
+        });
+
+        wrapper.addEventListener('mousemove', e => {
+          const pos = inst.coordsChar({left:e.clientX, top:e.clientY});
+          const line = inst.getLine(pos.line);
+          const idx = line.indexOf('[');
+          if(idx>=0 && pos.ch>=idx && pos.ch<=idx+1){
+            const coords = inst.charCoords({line:pos.line, ch:idx}, 'page');
+            const rect = wrapper.getBoundingClientRect();
+            hover.style.left = (coords.left - rect.left) + 'px';
+            hover.style.top = (coords.top - rect.top) + 'px';
+            hover.checked = line[idx+1] === 'x';
+            hover.style.display = 'block';
+            hover._pos = {line:pos.line};
+          }else{
+            hide();
+          }
+        });
+
         inst.on('mousedown', (cm,e)=>{
           const pos = cm.coordsChar({left:e.clientX, top:e.clientY});
           const line = cm.getLine(pos.line);
@@ -499,6 +539,7 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
             if(cb) cb(newLine, pos.line);
           }
         });
+
         inst.on('change',(cm,change)=>{
           if(change.origin==='+input' && cb){
             const line = cm.getLine(change.from.line);
@@ -509,6 +550,24 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
 
       setupCheckbox(cmAlice, maybeSend);
       setupCheckbox(cmBob, null);
+
+      cmBob.addKeyMap({
+        Enter: function(cm){
+          const pos = cm.getCursor();
+          const line = cm.getLine(pos.line);
+          const baseIndent = line.match(/^(\s*)/)[1];
+          const trimmed = line.slice(baseIndent.length);
+          if(!trimmed.startsWith('+') && !trimmed.startsWith('-')){
+            cm.replaceRange('\n', pos, pos, '+input');
+            return;
+          }
+          let indent = baseIndent;
+          if(trimmed.startsWith('+')) indent += '  ';
+          const prefix = indent + '- ';
+          cm.replaceRange('\n'+prefix, {line:pos.line, ch:line.length}, {line:pos.line, ch:line.length}, '+input');
+          cm.setCursor({line:pos.line+1, ch:prefix.length});
+        }
+      });
 
       cmBob.on('change', ()=>{
         const bobLines = cmBob.getValue().split(/\r?\n/);
@@ -531,7 +590,7 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
                 comments.push(l.trim().replace(/^[-+*]/,'+'));
               }
               const aliceLines = cmAlice.getValue().split(/\r?\n/);
-              const aidx = aliceLines.findIndex(l=>l.includes('#waiting') && l.includes(t.task));
+              let aidx = aliceLines.findIndex(l=>l.includes('#waiting') && l.includes(t.task));
               if(aidx!==-1){
                 aliceLines[aidx] = setLineState(aliceLines[aidx], status);
                 if(comments.length){
