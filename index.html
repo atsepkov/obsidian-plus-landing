@@ -134,9 +134,9 @@
     .CodeMirror-lines { padding:10px; }
     .cm-tag { color:#fff; border-radius:10px; padding:1px 5px; line-height: normal; display:inline-block; }
 
-    .CodeMirror span { color:var(--text-normal); }
-    .cm-bullet-plus { color:#3b82f6; }
-    .cm-bullet-star { color:#ef4444; }
+    /* .CodeMirror span { color:var(--text-normal); } */
+    .cm-bullet-plus { color:#3b82f6 !important; }
+    .cm-bullet-star { color:#ef4444 !important; }
     .cm-bullet-dash { color:var(--text-normal); }
 
     #notePanel { display:flex; flex-direction:column; height:460px; }
@@ -339,7 +339,7 @@
           }
         }
         if (stream.match(/#[A-Za-z0-9_-]+/)) return 'tag';
-        while (stream.next() != null && !stream.match(/#[A-Za-z0-9_-]+/, false)) {}
+        // while (stream.next() != null && !stream.match(/#[A-Za-z0-9_-]+/, false)) {}
         stream.next();
         return null;
       }
@@ -497,6 +497,18 @@ Document music that helps you focus:
       });
     }
 
+    function styleBulletLines(){
+      cm.eachLine(line=>{
+        cm.removeLineClass(line, 'text', 'cm-bullet-plus');
+        cm.removeLineClass(line, 'text', 'cm-bullet-star');
+        cm.removeLineClass(line, 'text', 'cm-bullet-dash');
+        const text = line.text.trimStart();
+        if (text.startsWith('+')) cm.addLineClass(line, 'text', 'cm-bullet-plus');
+        else if (text.startsWith('*')) cm.addLineClass(line, 'text', 'cm-bullet-star');
+        else if (text.startsWith('-')) cm.addLineClass(line, 'text', 'cm-bullet-dash');
+      });
+    }
+
     function styleEditorBullets(){
       const bullets = cm.getWrapperElement().querySelectorAll('.cm-formatting-list');
       bullets.forEach(el=>{
@@ -550,7 +562,7 @@ Document music that helps you focus:
         });
       });
       styleEditorTags();
-      styleEditorBullets();
+      styleBulletLines();
       matchHeights();
     }
 
