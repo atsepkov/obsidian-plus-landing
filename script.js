@@ -12,14 +12,10 @@
     
     // === Elements ===
     const includePadEl = document.getElementById('includePad');
-    const scenarioSelect = document.getElementById('scenarioSelect');
     const containerEl = document.getElementById('viewContainer');
-    const cm = CodeMirror.fromTextArea(document.getElementById('noteInput'), {
-      lineNumbers: false,
-      lineWrapping: true,
-      mode: null
-    });
-    cm.addOverlay({
+    const scenarioTabs = document.querySelectorAll('.scenario-tab');
+    const scenarioDescEl = document.getElementById('scenarioDesc');
+    const overlay = {
       token: function(stream) {
         if (stream.sol()) {
           stream.eatSpace();
@@ -34,14 +30,14 @@
         stream.next();
         return null;
       }
-    });
-    let widgets = [];
+    };
+    const cm = initEditor('noteInput', 'notePreview', 'editorWrap');
     cm.on('change', ()=>requestAnimationFrame(render));
-    cm.on('viewportChange', ()=>{ styleEditorTags(); styleBulletLines(); styleHeadings(); updateEditorWidgets(); });
+    cm.on('viewportChange', ()=>{ styleEditorTags(cm); styleBulletLines(cm); styleHeadings(cm); updateEditorWidgets(cm); renderNotePreview(cm, 'notePreview'); });
     
     // === Notes ===
     const SCENARIOS = {
-      default: {
+      dashboard: {
       'Daily Note':
 `Dump anything that comes to mind into your daily notes, all information will self-organize into a database:
 - 15 Boardwalk: guest-reported issues
@@ -122,10 +118,26 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
         - ![[music_screenshot4.png]]`
       }
     };
-    let currentScenario = 'default';
+    let currentScenario = 'dashboard';
     let NOTES = JSON.parse(JSON.stringify(SCENARIOS[currentScenario]));
     let currentNote = 'Daily Note';
     const noteTabs = document.querySelectorAll('.note-tab');
+    const SCENARIO_DESCS = {
+      dashboard: 'Jordan manages several rentals. He captures notes on the left and watches organized dashboards update on the right.',
+      handoff: 'Alice and Bob are coworkers handing off tasks. Send items from Alice\'s note to Bob and see updates flow back.'
+    };
+    scenarioDescEl.textContent = SCENARIO_DESCS.dashboard;
+    scenarioTabs.forEach(tab=>{
+      tab.addEventListener('click', ()=>{
+        const name = tab.dataset.scenario;
+        document.querySelectorAll('.scenario').forEach(s=>{
+          s.style.display = s.classList.contains('scenario-'+name) ? 'grid' : 'none';
+        });
+        scenarioTabs.forEach(t=>t.classList.toggle('active', t===tab));
+        scenarioDescEl.textContent = SCENARIO_DESCS[name];
+        if(name==='handoff' && typeof initHandoff === 'function') initHandoff();
+      });
+    });
 
     function parseTree(text){
       const root = [];
@@ -239,8 +251,8 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
       }</tbody></table></div></div>`;
     }
 
-    function styleEditorTags(){
-      const tags = cm.getWrapperElement().querySelectorAll('.cm-tag');
+    function styleEditorTags(inst){
+      const tags = inst.getWrapperElement().querySelectorAll('.cm-tag');
       tags.forEach(el=>{
         const clean = el.textContent.replace('#','');
         const {bg,fg} = tagStyles(clean);
@@ -249,15 +261,15 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
       });
     }
 
-    function styleBulletLines(){
-      cm.eachLine(line=>{
-        cm.removeLineClass(line, 'text', 'cm-bullet-plus');
-        cm.removeLineClass(line, 'text', 'cm-bullet-star');
-        cm.removeLineClass(line, 'text', 'cm-bullet-dash');
+    function styleBulletLines(inst){
+      inst.eachLine(line=>{
+        inst.removeLineClass(line, 'text', 'cm-bullet-plus');
+        inst.removeLineClass(line, 'text', 'cm-bullet-star');
+        inst.removeLineClass(line, 'text', 'cm-bullet-dash');
         const text = line.text.trimStart();
-        if (text.startsWith('+')) cm.addLineClass(line, 'text', 'cm-bullet-plus');
-        else if (text.startsWith('*')) cm.addLineClass(line, 'text', 'cm-bullet-star');
-        else if (text.startsWith('-')) cm.addLineClass(line, 'text', 'cm-bullet-dash');
+        if (text.startsWith('+')) inst.addLineClass(line, 'text', 'cm-bullet-plus');
+        else if (text.startsWith('*')) inst.addLineClass(line, 'text', 'cm-bullet-star');
+        else if (text.startsWith('-')) inst.addLineClass(line, 'text', 'cm-bullet-dash');
       });
     }
 
@@ -271,39 +283,39 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
       });
     }
 
-    function styleHeadings(){
-      cm.eachLine(line=>{
-        cm.removeLineClass(line, 'text', 'cm-h1');
-        cm.removeLineClass(line, 'text', 'cm-h2');
+    function styleHeadings(inst){
+      inst.eachLine(line=>{
+        inst.removeLineClass(line, 'text', 'cm-h1');
+        inst.removeLineClass(line, 'text', 'cm-h2');
         const text = line.text.trimStart();
-        if(text.startsWith('# ')) cm.addLineClass(line, 'text', 'cm-h1');
-        else if(text.startsWith('## ')) cm.addLineClass(line, 'text', 'cm-h2');
+        if(text.startsWith('# ')) inst.addLineClass(line, 'text', 'cm-h1');
+        else if(text.startsWith('## ')) inst.addLineClass(line, 'text', 'cm-h2');
       });
     }
 
-    function updateEditorWidgets(){
-      widgets.forEach(w=>w.clear());
-      widgets = [];
-      cm.eachLine((line)=>{
+    function updateEditorWidgets(inst){
+      inst._widgets = inst._widgets || [];
+      inst._widgets.forEach(w=>w.clear());
+      inst._widgets = [];
+      inst.eachLine((line)=>{
         const m = line.text.match(/!\[\[(.+?)\]\]/);
         if(m){
           const img = document.createElement('img');
           img.src = m[1];
           img.style.maxWidth = '100%';
           img.style.borderRadius = 'var(--radius-md)';
-          widgets.push(cm.addLineWidget(cm.getLineNumber(line), img, {below:true}));
+          inst._widgets.push(inst.addLineWidget(inst.getLineNumber(line), img, {below:true}));
         }
       });
     }
-
-    function matchHeights(){
-      const editorWrap = document.getElementById('editorWrap');
-      if(editorWrap) cm.setSize(null, editorWrap.clientHeight);
+    function matchHeights(inst, wrapId){
+      const editorWrap = document.getElementById(wrapId);
+      if(editorWrap) inst.setSize(null, editorWrap.clientHeight);
     }
-    function renderNotePreview(){
-      const preview = document.getElementById('notePreview');
+    function renderNotePreview(inst, previewId){
+      const preview = document.getElementById(previewId);
       if(!preview) return;
-      const text = cm.getValue();
+      const text = inst.getValue();
       const html = text.split(/\r?\n/).map(line=>{
         const trimmed = line.trim();
         if(/^!\[\[(.+?)\]\]/.test(trimmed)){
@@ -321,9 +333,23 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
       preview.innerHTML = html;
     }
 
+    function initEditor(textareaId, previewId, wrapId){
+      const inst = CodeMirror.fromTextArea(document.getElementById(textareaId), {
+        lineNumbers:false,
+        lineWrapping:true,
+        mode:null
+      });
+      inst.addOverlay(overlay);
+      const refresh = ()=>{ styleEditorTags(inst); styleBulletLines(inst); styleHeadings(inst); updateEditorWidgets(inst); renderNotePreview(inst, previewId); matchHeights(inst, wrapId); };
+      inst.on('change', refresh);
+      inst.on('viewportChange', refresh);
+      refresh();
+      return inst;
+    }
+
     function render(){
       if(!containerEl) return;
-      renderNotePreview();
+      renderNotePreview(cm, 'notePreview');
       const items = currentItems();
       const todos = items.filter(i=>i.view === 'task' && i.tags.some(t=>t==='todo' || t==='urgent'));
       const payments = items.filter(i=>i.view === 'payment');
@@ -362,11 +388,11 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
           render();
         });
       });
-      styleEditorTags();
-      styleBulletLines();
-      styleHeadings();
-      updateEditorWidgets();
-      matchHeights();
+      styleEditorTags(cm);
+      styleBulletLines(cm);
+      styleHeadings(cm);
+      updateEditorWidgets(cm);
+      matchHeights(cm, 'editorWrap');
     }
 
     if(includePadEl) includePadEl.addEventListener('input', render);
@@ -380,13 +406,7 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
 
     noteTabs.forEach(btn=>btn.addEventListener('click',()=>loadNote(btn.dataset.note)));
 
-    if(scenarioSelect){
-      scenarioSelect.addEventListener('change', ()=>{
-        currentScenario = scenarioSelect.value;
-        NOTES = JSON.parse(JSON.stringify(SCENARIOS[currentScenario]));
-        loadNote('Daily Note');
-      });
-    }
+    // scenarioSelect removed in favor of tabs
 
     function updateLineState(note, line, state){
       const apply = (lines)=>{
@@ -439,6 +459,68 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
       const due = c.due?` <span class="due">${c.due}</span>`:'';
       const url = c.url?` <a href="${c.url}" target="_blank">${c.url}</a>`:'';
       return `<li class="${bulletClass(c.bullet)}${c.status==='done'?' done':''}${c.status==='cancelled'?' cancelled':''}">${bullet}${tags} ${c.text}${due}${url}</li>`;
+    }
+
+    // === Alice ↔ Bob scenario ===
+    function initHandoff(){
+      if(initHandoff.ready) return;
+      initHandoff.ready = true;
+      const cmAlice = initEditor('aliceInput','alicePreview','aliceEditorWrap');
+      const cmBob = initEditor('bobInput','bobPreview','bobEditorWrap');
+      cmAlice.setValue(`# Alice Daily Note\n- [ ] #todo Bob: prepare Q3 report\n        - gather metrics from CRM`);
+      cmBob.setValue(`# Bob Daily Log`);
+      const transfers = [];
+      const sendBtn = document.getElementById('sendToBob');
+      if(sendBtn) sendBtn.addEventListener('click', ()=>{
+        const lines = cmAlice.getValue().split(/\r?\n/);
+        lines.forEach((line, idx)=>{
+          const m = line.match(/^([-+*])\s*\[ \]\s*#todo\s+Bob:\s*(.+)/i);
+          if(m){
+            const task = m[2].trim();
+            lines[idx] = line.replace('#todo','#waiting');
+            const bobLines = cmBob.getValue().split(/\r?\n/);
+            bobLines.push(`+ [ ] #todo Alice: ${task}`);
+            cmBob.setValue(bobLines.join('\n'));
+            transfers.push({task});
+          }
+        });
+        cmAlice.setValue(lines.join('\n'));
+      });
+      cmBob.on('change', ()=>{
+        const bobLines = cmBob.getValue().split(/\r?\n/);
+        transfers.forEach(t=>{
+          if(t.sent) return;
+          const idx = bobLines.findIndex(line=>line.includes(`#todo Alice:`) && line.includes(t.task));
+          if(idx===-1) return;
+          const line = bobLines[idx];
+          const statusChar = (line.match(/\[( |x|-)\]/)||[])[1]||' ';
+          const status = statusChar==='x'?'done':statusChar==='-'?'cancelled':'open';
+          if(status!=='open'){
+            clearTimeout(t.timer);
+            t.timer = setTimeout(()=>{
+              const indent = line.match(/^\s*/)[0].length;
+              const comments=[];
+              for(let i=idx+1;i<bobLines.length;i++){
+                const l = bobLines[i];
+                const ind = l.match(/^\s*/)[0].length;
+                if(ind<=indent) break;
+                comments.push(l.trim().replace(/^[-+*]/,'+'));
+              }
+              const aliceLines = cmAlice.getValue().split(/\r?\n/);
+              const aidx = aliceLines.findIndex(l=>l.includes('#waiting') && l.includes(t.task));
+              if(aidx!==-1){
+                aliceLines[aidx] = setLineState(aliceLines[aidx], status);
+                if(comments.length){
+                  const prefix = aliceLines[aidx].match(/^\s*/)[0]+'  ';
+                  comments.forEach(c=>aliceLines.splice(++aidx,0,prefix+c));
+                }
+                cmAlice.setValue(aliceLines.join('\n'));
+              }
+              t.sent = true;
+            },400);
+          }
+        });
+      });
     }
 
     // Footer year + theme how-to

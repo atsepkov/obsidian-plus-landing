@@ -82,7 +82,7 @@
     <!-- SYSTEMS -->
     <section id="systems">
       <div class="container">
-        <h2>Works with any system</h2>
+        <h2>Works with any <strong style="color:var(--accent);">productivity</strong> system</h2>
         <p class="sub">GTD, EOS, or something uniquely yours — Obsidian+ adapts to whatever methodology drives you.</p>
         <div class="grid features" style="margin-top:18px;">
           <div class="feature card">
@@ -109,19 +109,25 @@
       </div>
     </section>
 
+    <!-- PLATFORMS -->
+    <section id="platforms">
+      <div class="container">
+        <h2>Works with any <strong style="color:var(--accent);">operating</strong> system</h2>
+        <p class="sub">Obsidian Sync keeps your notes in lockstep across devices. Use native apps on Windows, macOS, Linux, iOS, or Android and stay productive anywhere.</p>
+      </div>
+    </section>
+
     <!-- LIVE DEMO (Dataview‑ish) -->
     <section id="demo">
       <div class="container">
-        <h2>Live demo (notes → dashboards)</h2>
-        <p class="sub">Type content in the left pane like you would in your notes. The right pane auto-generates dashboards based on a database built from your notes.</p>
-        <div class="demo-controls" style="margin-bottom:10px;max-width:200px;">
-          <label for="scenarioSelect">Scenario</label>
-          <select id="scenarioSelect">
-            <option value="default">Standard</option>
-          </select>
+        <h2>Live demo</h2>
+        <div class="scenario-tabs" style="margin-bottom:8px;">
+          <button class="scenario-tab active" data-scenario="dashboard">Notes → Dashboard</button>
+          <button class="scenario-tab" data-scenario="handoff">Alice ↔ Bob</button>
         </div>
+        <p id="scenarioDesc" class="sub"></p>
 
-        <div class="demo-wrap" style="align-items:start;">
+        <div class="demo-wrap scenario scenario-dashboard" style="align-items:start;">
           <!-- LEFT: Note editor -->
           <div id="notePanel" class="card panel">
             <div style="font-weight:700;">Notes (type here)</div>
@@ -137,15 +143,30 @@
             <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text-muted);margin-top:8px;">
               <input id="includePad" type="checkbox" checked style="accent-color:var(--accent);"> Add a few sample items from other notes (to simulate vault-wide rollups)
             </label>
-            <!-- <div class="callout" style="margin-top:8px;">
-              Tip: In your vault, the plugin reads actual notes (frontmatter + lines) and writes real views. This demo just shows the <em>feel</em> of the flow.
-            </div> -->
           </div>
 
           <!-- RIGHT: Preview -->
           <div id="previewPanel" class="panel" style="padding:0;">
-            <!-- <div style="font-weight:700; margin:12px;">Preview</div> -->
             <div id="viewContainer" class="rendered-note"></div>
+          </div>
+        </div>
+
+        <div class="demo-wrap scenario scenario-handoff" style="display:none;align-items:start;">
+          <div id="alicePanel" class="card panel">
+            <div style="font-weight:700;">Alice's Notebook</div>
+            <div id="aliceEditorWrap">
+              <textarea id="aliceInput" spellcheck="false"></textarea>
+            </div>
+            <div id="alicePreview" class="rendered-note"></div>
+            <button id="sendToBob" class="btn" style="margin-top:8px;">Send to Bob</button>
+          </div>
+
+          <div id="bobPanel" class="card panel">
+            <div style="font-weight:700;">Bob's Notebook</div>
+            <div id="bobEditorWrap">
+              <textarea id="bobInput" spellcheck="false"></textarea>
+            </div>
+            <div id="bobPreview" class="rendered-note"></div>
           </div>
         </div>
       </div>
