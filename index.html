@@ -132,7 +132,7 @@
               <button class="note-tab" data-note="Transaction Log">Transaction Log</button>
               <button class="note-tab" data-note="Project Note">Project Note</button>
             </div>
-            <div id="editorWrap">
+            <div id="editorWrap" class="editor-wrap">
               <textarea id="noteInput" spellcheck="false"></textarea>
             </div>
             <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text-muted);margin-top:8px;">
@@ -153,14 +153,14 @@
               <button class="note-tab active" data-wrap="aliceDailyWrap">Daily Note</button>
               <button class="note-tab" data-wrap="aliceLogWrap">Transaction Log <span class="count-badge" id="aliceLogBadge"></span></button>
             </div>
-            <div id="aliceDailyWrap">
+            <div id="aliceDailyWrap" class="editor-wrap">
               <textarea id="aliceDaily" spellcheck="false"></textarea>
             </div>
-            <div id="aliceLogWrap" style="display:none;">
+            <div id="aliceLogWrap" class="editor-wrap" style="display:none;">
               <textarea id="aliceLog" spellcheck="false"></textarea>
             </div>
             <div id="aliceDash" class="table-wrap collapsed mini-dash">
-              <div class="dash-header"><span class="dash-title">Todos</span><span class="count-badge"></span><span class="arrow">▸</span></div>
+              <div class="dash-header"><span class="dash-title">Todos</span><span class="count-total"></span><span class="count-badge"></span><span class="arrow">▸</span></div>
               <div class="dash-body"><ul></ul></div>
             </div>
           </div>
@@ -171,14 +171,14 @@
               <button class="note-tab active" data-wrap="bobDailyWrap">Daily Note</button>
               <button class="note-tab" data-wrap="bobLogWrap">Transaction Log <span class="count-badge" id="bobLogBadge"></span></button>
             </div>
-            <div id="bobDailyWrap">
+            <div id="bobDailyWrap" class="editor-wrap">
               <textarea id="bobDaily" spellcheck="false"></textarea>
             </div>
-            <div id="bobLogWrap" style="display:none;">
+            <div id="bobLogWrap" class="editor-wrap" style="display:none;">
               <textarea id="bobLog" spellcheck="false"></textarea>
             </div>
             <div id="bobDash" class="table-wrap collapsed mini-dash">
-              <div class="dash-header"><span class="dash-title">Todos</span><span class="count-badge"></span><span class="arrow">▸</span></div>
+              <div class="dash-header"><span class="dash-title">Todos</span><span class="count-total"></span><span class="count-badge"></span><span class="arrow">▸</span></div>
               <div class="dash-body"><ul></ul></div>
             </div>
           </div>

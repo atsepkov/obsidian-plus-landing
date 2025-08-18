@@ -145,6 +145,10 @@
       transform:rotate(90deg);
       margin-left:auto;
     }
+    .dash-header .count-total {
+      font-size:12px;
+      color:var(--text-muted);
+    }
     .dash-header .count-badge {
       background:var(--danger);
       color:#fff;
@@ -240,7 +244,7 @@
 
 #notePanel, #alicePanel, #bobPanel { display:flex; flex-direction:column; height:520px; }
 #previewPanel { height:540px; overflow:auto; }
-#editorWrap, #aliceEditorWrap, #bobEditorWrap { flex:1; min-height:400px; }
+.editor-wrap { flex:1; min-height:400px; }
 
     /* .rendered-note {  } */
     .card table { margin-bottom: 5px; }

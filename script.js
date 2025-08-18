@@ -249,7 +249,7 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
 
     function tableHTML(title, items){
       if(!items.length) return '';
-      return `<div class="card table-wrap"><div class="dash-header"><span class="dash-title">${title}</span><span class="count-badge"></span><span class="arrow">›</span></div><div class="dash-body"><table><tbody>${
+      return `<div class="card table-wrap"><div class="dash-header"><span class="dash-title">${title}</span><span class="count-total"></span><span class="count-badge"></span><span class="arrow">›</span></div><div class="dash-body"><table><tbody>${
         items.map(i=>`<tr class="item ${bulletClass(i.bullet)}${i.status==='done'?' done':''}${i.status==='cancelled'?' cancelled':''}" data-note="${i.source}"><td>${renderMainLine(i)}</td></tr>${i.children.length?`<tr class="details"><td><ul>${i.children.map(renderChildLine).join('')}</ul></td></tr>`:''}`).join('')
       }</tbody></table></div></div>`;
     }
@@ -313,7 +313,11 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
     }
     function matchHeights(inst, wrapId){
       const editorWrap = document.getElementById(wrapId);
-      if(editorWrap) inst.setSize(null, editorWrap.clientHeight);
+      if(editorWrap){
+        const h = editorWrap.clientHeight || 400;
+        inst.setSize(null, h);
+        inst.refresh();
+      }
     }
     function initEditor(textareaId, wrapId){
       const inst = CodeMirror.fromTextArea(document.getElementById(textareaId), {
@@ -339,10 +343,13 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
       containerEl.innerHTML = tableHTML('Todos', todos) + tableHTML('Payments', payments) + tableHTML('Music', music) + tableHTML('Monitoring', monitoring);
       const todoAlerts = todos.filter(i=>i.tags.includes('urgent')).length;
       const monitoringErrors = monitoring.filter(i=>i.bullet==='*').length;
+      const totals = {Todos:todos.length, Payments:payments.length, Music:music.length, Monitoring:monitoring.length};
       const wraps = containerEl.querySelectorAll('.table-wrap');
       wraps.forEach(wrap=>{
         const header = wrap.querySelector('.dash-header');
         const title = header.querySelector('.dash-title').textContent.trim();
+        const totalEl = header.querySelector('.count-total');
+        if(totalEl) totalEl.textContent = totals[title]||0;
         header.addEventListener('click',()=>{
           wrap.classList.toggle('collapsed');
           dashState[title] = wrap.classList.contains('collapsed');
@@ -475,7 +482,9 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
         arr.push(...lines);
         cmLog.setValue(arr.join('\n'));
         requestAnimationFrame(()=>{
-          styleEditorTags(cmLog); styleBulletLines(cmLog); styleHeadings(cmLog); updateEditorWidgets(cmLog); updateMiniDash(person);
+          styleEditorTags(cmLog); styleBulletLines(cmLog); styleHeadings(cmLog); updateEditorWidgets(cmLog);
+          matchHeights(cmLog, cmLog.getTextArea().parentElement.id);
+          updateMiniDash(person);
         });
       }
 
@@ -592,6 +601,15 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
           if(/#(todo|waiting)/.test(text)) items.push({bullet,status,text});
         });
         ul.innerHTML = items.map(i=>`<li class="${bulletClass(i.bullet)}${i.status!=='open'?' done':''}"><span class="dash-bullet ${bulletClass(i.bullet)}"></span>${i.text}</li>`).join('');
+        const totalEl = dash.querySelector('.count-total');
+        if(totalEl) totalEl.textContent = items.length;
+        const urgentCount = items.filter(i=>/#urgent/.test(i.text)).length;
+        const badgeEl = dash.querySelector('.count-badge');
+        if(badgeEl){
+          badgeEl.textContent = urgentCount;
+          badgeEl.dataset.count = urgentCount;
+          badgeEl.style.display = urgentCount>0 && dash.classList.contains('collapsed') ? 'inline-block':'none';
+        }
       }
 
       cmAliceDaily.on('change', ()=>updateMiniDash('Alice'));
@@ -616,6 +634,10 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
               else { bobLogCount=0; updateBadge('Bob'); }
             }
             updateEditorWidgets(cmAliceDaily); updateEditorWidgets(cmAliceLog); updateEditorWidgets(cmBobDaily); updateEditorWidgets(cmBobLog);
+            matchHeights(cmAliceDaily,'aliceDailyWrap');
+            matchHeights(cmAliceLog,'aliceLogWrap');
+            matchHeights(cmBobDaily,'bobDailyWrap');
+            matchHeights(cmBobLog,'bobLogWrap');
           });
         });
       }
@@ -627,6 +649,7 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
         const header = wrap.querySelector('.dash-header');
         header.addEventListener('click',()=>{
           wrap.classList.toggle('collapsed');
+          updateMiniDash(id==='aliceDash'?'Alice':'Bob');
         });
       });
     }
