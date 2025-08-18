@@ -212,8 +212,7 @@
   height:16px;
   cursor:pointer;
   position:absolute;
-  margin-top:-19px;
-  margin-left:14px;
+  transform:translate(10px,-21px);
   z-index:10;
   border:1px solid var(--border);
   border-radius:4px;
@@ -241,6 +240,14 @@
   color:#fff;
   font-size:14px;
 }
+
+.demo-disclaimer {
+  margin-top:8px;
+  font-size:13px;
+  color:var(--text-muted);
+}
+
+.notebook { display:flex; flex-direction:column; gap:8px; }
 
 #notePanel, #alicePanel, #bobPanel { display:flex; flex-direction:column; height:520px; }
 #previewPanel { height:540px; overflow:auto; }

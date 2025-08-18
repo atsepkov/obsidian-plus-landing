@@ -147,42 +147,48 @@
         </div>
 
         <div class="demo-wrap scenario scenario-handoff" style="display:none;align-items:start;">
-          <div id="alicePanel" class="card panel">
-            <div style="font-weight:700;font-size:16px;">Alice's Notebook</div>
-            <div class="note-tabs">
-              <button class="note-tab active" data-wrap="aliceDailyWrap">Daily Note</button>
-              <button class="note-tab" data-wrap="aliceLogWrap">Transaction Log <span class="count-badge" id="aliceLogBadge"></span></button>
+          <div class="notebook">
+            <div id="alicePanel" class="card panel">
+              <div style="font-weight:700;font-size:16px;">Alice's Notebook</div>
+              <div class="note-tabs">
+                <button class="note-tab active" data-wrap="aliceDailyWrap">Daily Note</button>
+                <button class="note-tab" data-wrap="aliceLogWrap">Transaction Log <span class="count-badge" id="aliceLogBadge"></span></button>
+              </div>
+              <div id="aliceDailyWrap" class="editor-wrap">
+                <textarea id="aliceDaily" spellcheck="false"></textarea>
+              </div>
+              <div id="aliceLogWrap" class="editor-wrap" style="display:none;">
+                <textarea id="aliceLog" spellcheck="false"></textarea>
+              </div>
             </div>
-            <div id="aliceDailyWrap" class="editor-wrap">
-              <textarea id="aliceDaily" spellcheck="false"></textarea>
-            </div>
-            <div id="aliceLogWrap" class="editor-wrap" style="display:none;">
-              <textarea id="aliceLog" spellcheck="false"></textarea>
-            </div>
-            <div id="aliceDash" class="table-wrap collapsed mini-dash">
-              <div class="dash-header"><span class="dash-title">Todos</span><span class="count-total"></span><span class="count-badge"></span><span class="arrow">▸</span></div>
+            <div id="aliceDash" class="card table-wrap mini-dash">
+              <div class="dash-header"><span class="dash-title">Alice's Todo</span><span class="count-total"></span><span class="count-badge"></span><span class="arrow">▸</span></div>
               <div class="dash-body"><ul></ul></div>
             </div>
           </div>
 
-          <div id="bobPanel" class="card panel">
-            <div style="font-weight:700;font-size:16px;">Bob's Notebook</div>
-            <div class="note-tabs">
-              <button class="note-tab active" data-wrap="bobDailyWrap">Daily Note</button>
-              <button class="note-tab" data-wrap="bobLogWrap">Transaction Log <span class="count-badge" id="bobLogBadge"></span></button>
+          <div class="notebook">
+            <div id="bobPanel" class="card panel">
+              <div style="font-weight:700;font-size:16px;">Bob's Notebook</div>
+              <div class="note-tabs">
+                <button class="note-tab active" data-wrap="bobDailyWrap">Daily Note</button>
+                <button class="note-tab" data-wrap="bobLogWrap">Transaction Log <span class="count-badge" id="bobLogBadge"></span></button>
+              </div>
+              <div id="bobDailyWrap" class="editor-wrap">
+                <textarea id="bobDaily" spellcheck="false"></textarea>
+              </div>
+              <div id="bobLogWrap" class="editor-wrap" style="display:none;">
+                <textarea id="bobLog" spellcheck="false"></textarea>
+              </div>
             </div>
-            <div id="bobDailyWrap" class="editor-wrap">
-              <textarea id="bobDaily" spellcheck="false"></textarea>
-            </div>
-            <div id="bobLogWrap" class="editor-wrap" style="display:none;">
-              <textarea id="bobLog" spellcheck="false"></textarea>
-            </div>
-            <div id="bobDash" class="table-wrap collapsed mini-dash">
-              <div class="dash-header"><span class="dash-title">Todos</span><span class="count-total"></span><span class="count-badge"></span><span class="arrow">▸</span></div>
+            <div id="bobDash" class="card table-wrap mini-dash">
+              <div class="dash-header"><span class="dash-title">Bob's Todo</span><span class="count-total"></span><span class="count-badge"></span><span class="arrow">▸</span></div>
               <div class="dash-body"><ul></ul></div>
             </div>
           </div>
         </div>
+
+        <p class="demo-disclaimer">This demo may contain bugs and is only meant to showcase the capability, not to replicate it.</p>
       </div>
     </section>
 
@@ -227,7 +233,8 @@
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/codemirror.min.js"></script>
   <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/mode/markdown/markdown.min.js"></script> -->
-  <script src="script.js"></script>    
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/addon/mode/overlay.min.js"></script>
+  <script src="script.js"></script>
 </body>
 </html>
 
