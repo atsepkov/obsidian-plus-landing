@@ -490,23 +490,29 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
         });
       }
 
+      function collectChildLines(cm, startIdx){
+        const lines = cm.getValue().split(/\r?\n/);
+        const baseIndent = (lines[startIdx].match(/^\s*/) || ['',''])[0].length;
+        const out = [];
+        for(let i=startIdx+1;i<lines.length;i++){
+          const l = lines[i];
+          const ind = (l.match(/^\s*/) || ['',''])[0].length;
+          if(l.trim()==='') continue;
+          if(ind <= baseIndent) break;
+          const rel = ind - baseIndent;
+          const ctext = l.trim().replace(/^[-+*]/,'+');
+          out.push(' '.repeat(rel) + ctext);
+        }
+        return out;
+      }
+
       function makeSender(fromCM, toLogCM, fromName, toName){
         return function(lineText, idx){
           const re = new RegExp(`^([-+*])\\s*\\[(x|-| )\\]\\s*#${toName}\\b:?\\s*(.+)`, 'i');
           const m = lineText.match(re);
           if(m && m[2] !== ' '){
             const task = m[3].trim();
-            const indent = (lineText.match(/^(\\s*)/) || ['',''])[1];
-            const lines = fromCM.getValue().split(/\\r?\\n/);
-            const context = [];
-            for(let i=idx+1;i<lines.length;i++){
-              const l = lines[i];
-              const ind = (l.match(/^(\\s*)/) || ['',''])[1];
-              if(ind.length <= indent.length) break;
-              const ctext = l.trim().replace(/^[-+*]/,'+');
-              const rel = ind.length - indent.length;
-              context.push(' '.repeat(rel) + ctext);
-            }
+            const context = collectChildLines(fromCM, idx);
             let replaced = lineText.replace(`#${toName}`, `#waiting ${toName}:`);
             replaced = setLineState(replaced,'open');
             fromCM.replaceRange(replaced,{line:idx,ch:0},{line:idx,ch:lineText.length});
@@ -523,23 +529,13 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
           const m = lineText.match(re);
           if(m && m[1] !== ' '){
             const task = m[2].trim();
-            const indent = (lineText.match(/^(\\s*)/) || ['',''])[1];
-            const lines = fromLogCM.getValue().split(/\\r?\\n/);
-            const context = [];
-            for(let i=idx+1;i<lines.length;i++){
-              const l = lines[i];
-              const ind = (l.match(/^(\\s*)/) || ['',''])[1];
-              if(ind.length <= indent.length) break;
-              const ctext = l.trim().replace(/^[-+*]/,'+');
-              const rel = ind.length - indent.length;
-              context.push(' '.repeat(rel) + ctext);
-            }
+            const context = collectChildLines(fromLogCM, idx);
             const doneLine = setLineState(lineText,'done');
             fromLogCM.replaceRange(doneLine,{line:idx,ch:0},{line:idx,ch:lineText.length});
-            const targetLines = toDailyCM.getValue().split(/\\r?\\n/);
+            const targetLines = toDailyCM.getValue().split(/\r?\n/);
             for(let j=0;j<targetLines.length;j++){
               if(targetLines[j].includes(`#waiting ${fromName}:`) && targetLines[j].includes(task)){
-                const parentIndent = (targetLines[j].match(/^(\\s*)/) || ['',''])[1];
+                const parentIndent = (targetLines[j].match(/^\s*/) || ['',''])[0];
                 targetLines[j] = setLineState(targetLines[j],'done');
                 const prefixed = context.map(l=>parentIndent + l);
                 targetLines.splice(j+1,0,...prefixed);
@@ -639,7 +635,7 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
         const items = [
           ...collectFromNote(person+" Daily", daily.getValue()),
           ...collectFromNote(person+" Log", log.getValue())
-        ].filter(i=>i.tags.some(t=>t==='todo'||t==='waiting'||t==='alice'||t==='bob'));
+        ].filter(i=>i.tags.some(t=>t==='todo'||t==='waiting'));
         body.innerHTML = `<table><tbody>${items.map(i=>`<tr class="item ${bulletClass(i.bullet)}${i.status==='done'?' done':''}${i.status==='cancelled'?' cancelled':''}" data-note="${i.source}"><td>${renderMainLine(i)}</td></tr>${i.children.length?`<tr class="details"><td><ul>${i.children.map(renderChildLine).join('')}</ul></td></tr>`:''}`).join('')}</tbody></table>`;
         const totalEl = dash.querySelector('.count-total');
         if(totalEl) totalEl.textContent = items.length;
