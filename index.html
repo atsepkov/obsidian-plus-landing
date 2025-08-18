@@ -132,6 +132,7 @@
     /* CodeMirror tweaks */
     .CodeMirror { height:100%; border:1px solid var(--border); border-radius: var(--radius-md); font-size:13px; background:var(--callout-bg); color:var(--text-normal); }
     .CodeMirror-lines { padding:10px; }
+    .CodeMirror-cursor { border-left:1px solid var(--text-normal); }
     .cm-tag { color:#fff; border-radius:10px; padding:1px 5px; line-height: normal; display:inline-block; }
 
     /* .CodeMirror span { color:var(--text-normal); } */
@@ -139,9 +140,15 @@
     .cm-bullet-star { color:#ef4444 !important; }
     .cm-bullet-dash { color:var(--text-normal); }
 
-    #notePanel { display:flex; flex-direction:column; height:460px; }
-    #previewPanel { height:420px; overflow:auto; }
-    #editorWrap { flex:1; min-height:360px; }
+    .chk {
+      display:inline-block; width:16px; height:16px; border:1px solid var(--border); border-radius:4px; cursor:pointer; position:relative; vertical-align:middle;
+    }
+    .chk[data-state="done"]::after { content:'\2713'; position:absolute; top:-2px; left:2px; color:var(--success); font-size:14px; }
+    .chk[data-state="cancelled"]::after { content:'\2717'; position:absolute; top:-2px; left:2px; color:var(--danger); font-size:14px; }
+
+    #notePanel { display:flex; flex-direction:column; height:520px; }
+    #previewPanel { height:480px; overflow:auto; }
+    #editorWrap { flex:1; min-height:400px; }
 
     /* .rendered-note {  } */
     .card table { margin-bottom: 5px; }
@@ -344,7 +351,7 @@
         return null;
       }
     });
-    cm.on('change', render);
+    cm.on('change', ()=>requestAnimationFrame(render));
     
     // === Notes ===
     const NOTES = {
@@ -392,10 +399,14 @@ Document music that helps you focus:
 	- note: will Zelle the rest by Monday
 		- [ ] #todo ping Maryann about remaining payment
 + #iot 5 Bow St: abnormal moisture levels under kitchen sink
-	- [ ] #todo check kitchen sink for leaks
+        - [ ] #todo check kitchen sink for leaks
 + #iot 16 Pearl St: abnormally high electric usage (60kWh/day)
-	- probably AC
-* #iot 5 Bow St: lightbulb offline (rear hallway)`,
+        - probably AC
+* #iot 5 Bow St: lightbulb offline (rear hallway)
++ #iot 22 Oak Ridge: basement humidity 80%
+        - [ ] #todo inspect dehumidifier
++ #iot 10 Market St: front door left ajar
+        - [ ] #todo contact security`,
 
       'Project Note':
 `This page is dedicated to a specific project, it's not part of the daily notes. The content can be in whatever format you want, only tags you assign meaning to get interpreted.
@@ -421,18 +432,23 @@ Document music that helps you focus:
         if(!line.trim()) return;
         const indent = line.match(/^\s*/)[0].length;
         const clean = line.trim();
-        const checked = /^[-*]\s*\[x\]/i.test(clean);
+        const statusChar = (clean.match(/^[-+*]\s*\[( |x|-)\]/i)||[])[1] || ' ';
+        const status = statusChar === 'x' ? 'done' : statusChar === '-' ? 'cancelled' : 'open';
         const tags = Array.from(clean.matchAll(/#([A-Za-z0-9_-]+)/g)).map(m=>m[1].toLowerCase());
-        const due = (clean.match(/\ud83d\udcc5\s*([0-9]{4}-[0-9]{2}-[0-9]{2})/)||[])[1] || (clean.match(/\b(202[4-9]-[01]\d-[0-3]\d)\b/)||[])[1] || '';
+        const due = (clean.match(/(?:\ud83d\udcc5|✅|❌|⏳)\s*(202[4-9]-[01]\d-[0-3]\d)/)||[])[1]
+          || (clean.match(/\[\[(202[4-9]-[01]\d-[0-3]\d)\]\]/)||[])[1]
+          || (clean.match(/\b(202[4-9]-[01]\d-[0-3]\d)\b/)||[])[1]
+          || '';
         const url = (clean.match(/https?:\/\/\S+/)||[])[0] || '';
         const textContent = clean
-          .replace(/^[-+*]\s*\[[x\s]\]\s*/i,'')
+          .replace(/^[-+*]\s*\[(?:x|\s|-)\]\s*/i,'')
           .replace(/^[-+*]\s*/,'')
           .replace(/#[A-Za-z0-9_-]+/g,'')
-          .replace(/\ud83d\udcc5\s*[0-9\/\-]+/g,'')
+          .replace(/(?:\ud83d\udcc5|✅|❌|⏳)\s*[0-9\/\-]+/g,'')
+          .replace(/\[\[202[4-9]-[01]\d-[0-3]\d\]\]/g,'')
           .replace(url,'')
           .replace(/\s{2,}/g,' ').trim();
-        const node = { text:textContent, tags, due, url, checked, line:idx, children:[] };
+        const node = { text:textContent, tags, due, url, status, line:idx, children:[] };
         while(stack.length && indent <= stack[stack.length-1].indent) stack.pop();
         stack[stack.length-1].children.push(node);
         stack.push({ indent, children: node.children });
@@ -441,17 +457,33 @@ Document music that helps you focus:
     }
 
     function collectFromNote(name, text){
-      return parseTree(text).filter(n=>n.tags.length).map(n=>({
-        title:n.text,
-        tags:n.tags,
-        due:n.due,
-        url:n.url,
-        checked:n.checked,
-        line:n.line,
-        view:n.tags.includes('music') ? 'music' : (n.tags.some(t=>t==='payment' || t==='pay') ? 'transaction' : 'task'),
-        source:name,
-        children:n.children
-      }));
+      const out = [];
+      function walk(nodes, ctx){
+        nodes.forEach(n=>{
+          const nextCtx = n.text.includes(':') ? n.text.split(':')[0].trim() : ctx;
+          const children = n.children.filter(c=>!c.tags.length);
+          let title = n.text;
+          if(ctx && n.tags.some(t=>t==='todo' || t==='urgent')){
+            title = `${ctx}: ${title}`;
+          }
+          if(n.tags.length){
+            out.push({
+              title,
+              tags:n.tags,
+              due:n.due,
+              url:n.url,
+              status:n.status,
+              line:n.line,
+              view:n.tags.includes('music') ? 'music' : (n.tags.includes('iot') ? 'monitoring' : (n.tags.some(t=>t==='payment' || t==='pay') ? 'payment' : 'task')),
+              source:name,
+              children
+            });
+          }
+          if(n.children.length) walk(n.children, nextCtx);
+        });
+      }
+      walk(parseTree(text), '');
+      return out;
     }
 
     function currentItems(){
@@ -528,9 +560,10 @@ Document music that helps you focus:
       if(!containerEl) return;
       const items = currentItems();
       const todos = items.filter(i=>i.view === 'task' && i.tags.some(t=>t==='todo' || t==='urgent'));
-      const transactions = items.filter(i=>i.view === 'transaction');
+      const payments = items.filter(i=>i.view === 'payment');
       const music = items.filter(i=>i.view === 'music');
-      containerEl.innerHTML = tableHTML('Todos', todos) + tableHTML('Transactions', transactions) + tableHTML('Music', music);
+      const monitoring = items.filter(i=>i.view === 'monitoring');
+      containerEl.innerHTML = tableHTML('Todos', todos) + tableHTML('Payments', payments) + tableHTML('Music', music) + tableHTML('Monitoring', monitoring);
       containerEl.querySelectorAll('tr.item').forEach(row=>{
         row.addEventListener('click',()=>{
           const next = row.nextElementSibling;
@@ -541,24 +574,14 @@ Document music that helps you focus:
         a.addEventListener('click',e=>{ e.preventDefault(); e.stopPropagation(); loadNote(a.dataset.note); });
       });
       containerEl.querySelectorAll('.chk').forEach(cb=>{
-        cb.addEventListener('click',e=>e.stopPropagation());
-        cb.addEventListener('change',e=>{
+        cb.addEventListener('click',e=>{
           e.stopPropagation();
           const note = cb.dataset.note;
           const line = Number(cb.dataset.line);
-          const checked = cb.checked;
-          if(note===currentNote){
-            const lineText = cm.getLine(line);
-            const newLine = lineText.replace(/\[(x| )\]/i, checked ? '[x]' : '[ ]');
-            cm.replaceRange(newLine, {line, ch:0}, {line, ch:lineText.length});
-          }else{
-            const lines = (NOTES[note]||'').split(/\r?\n/);
-            if(line < lines.length){
-              lines[line] = lines[line].replace(/\[(x| )\]/i, checked ? '[x]' : '[ ]');
-              NOTES[note] = lines.join('\n');
-            }
-            render();
-          }
+          const state = cb.dataset.state;
+          const next = state==='open'?'done':(state==='done'?'cancelled':'open');
+          updateLineState(note, line, next);
+          render();
         });
       });
       styleEditorTags();
@@ -572,21 +595,52 @@ Document music that helps you focus:
       currentNote = name;
       noteTabs.forEach(b=>b.classList.toggle('active', b.dataset.note===name));
       cm.setValue(NOTES[name]||'');
-      render();
+      requestAnimationFrame(render);
     }
 
     noteTabs.forEach(btn=>btn.addEventListener('click',()=>loadNote(btn.dataset.note)));
 
+    function updateLineState(note, line, state){
+      const apply = (lines)=>{
+        if(line < lines.length){
+          lines[line] = setLineState(lines[line], state);
+        }
+      };
+      if(note===currentNote){
+        const lineText = cm.getLine(line);
+        const newLine = setLineState(lineText, state);
+        cm.replaceRange(newLine, {line, ch:0}, {line, ch:lineText.length});
+      }else{
+        const lines = (NOTES[note]||'').split(/\r?\n/);
+        apply(lines);
+        NOTES[note] = lines.join('\n');
+      }
+    }
+
+    function setLineState(text, state){
+      const now = new Date().toISOString().slice(0,10);
+      let newText = text.replace(/\[( |x|-)\]/, state==='done'?'[x]':state==='cancelled'?'[-]':'[ ]');
+      newText = newText.replace(/\s*(✅|❌)\s*202[4-9]-[01]\d-[0-3]\d/, '');
+      if(state==='done') newText = newText.trimEnd()+` ✅ ${now}`;
+      else if(state==='cancelled') newText = newText.trimEnd()+` ❌ ${now}`;
+      return newText;
+    }
+
     function renderMainLine(i){
-      const checkbox = i.view === 'task' ? `<input type="checkbox" class="chk" data-note="${i.source}" data-line="${i.line}"${i.checked?' checked':''}> ` : '';
+      const checkbox = i.view === 'task' ? `<span class="chk" data-note="${i.source}" data-line="${i.line}" data-state="${i.status}"></span> ` : '';
       const tags = i.tags.map(t=>badge('#'+t)).join(' ');
-      const due = i.due?` <span class="due">${i.due}</span>`:'';
+      const statusIcon = i.status==='done' ? '✅' : (i.status==='cancelled' ? '❌' : '');
+      const due = i.due?` <span class="due">${statusIcon} ${i.due}</span>`:'';
       const link = `<a href="#" class="note-link" data-note="${i.source}">${i.source}</a>`;
       const url = i.url?` <a href="${i.url}" target="_blank">${i.url}</a>`:'';
       return `${checkbox}${tags} ${i.title}${due} ${link}${url}`;
     }
 
     function renderChildLine(c){
+      if(/^!\[\[(.+?)\]\]/.test(c.text)){
+        const img = RegExp.$1;
+        return `<li><img src="${img}" alt="${img}" style="max-width:100%;"></li>`;
+      }
       const tags = c.tags.map(t=>badge('#'+t)).join(' ');
       const due = c.due?` <span class="due">${c.due}</span>`:'';
       const url = c.url?` <a href="${c.url}" target="_blank">${c.url}</a>`:'';
