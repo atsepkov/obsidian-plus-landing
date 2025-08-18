@@ -126,7 +126,7 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
     const noteTabs = document.querySelectorAll('.note-tab[data-note]');
     const SCENARIO_DESCS = {
       dashboard: "Jordan manages several rentals. He spends a lot of time on the go, with his phone. He's a big proponent of GTD, but struggled to implement it in an electronic form. No tool was flexible enough, and most fell apart if system wasn't followed religiously. With Obsidian+, the data organizes itself. Now his daily notes are his inbox basket. His properties are his projects, marking something with a tag flags it important, everything else becomes reference. Jordan can quickly see who paid the rent and if there is a water leak. Problems surface to the top before they become emergencies.",
-      handoff: 'Alice and Bob are coworkers sharing linked notebooks. Check a #todo with your teammate\'s name to send it to their Transaction Log so nothing falls through the cracks.'
+      handoff: 'Alice and Bob are coworkers sharing linked notebooks. Check a task tagged with your teammate (e.g. #Bob) to send it to their Transaction Log so nothing falls through the cracks.'
     };
     scenarioDescEl.textContent = SCENARIO_DESCS.dashboard;
     scenarioTabs.forEach(tab=>{
@@ -219,7 +219,9 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
       pay:    { bg:'#10b981', fg:'#ffffff' },
       'check-in':{ bg:'#0ea5e9', fg:'#ffffff' },
       iot:    { bg:'#0ea5e9', fg:'#ffffff' },
-      chatgpt:{ bg:'#8b5cf6', fg:'#ffffff' }
+      chatgpt:{ bg:'#8b5cf6', fg:'#ffffff' },
+      alice:  { bg:'#ec4899', fg:'#ffffff' },
+      bob:    { bg:'#f59e0b', fg:'#ffffff' }
     };
 
     function tagStyles(str){
@@ -461,9 +463,9 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
       const cmAliceLog = initEditor('aliceLog', 'aliceLogWrap');
       const cmBobDaily = initEditor('bobDaily', 'bobDailyWrap');
       const cmBobLog = initEditor('bobLog', 'bobLogWrap');
-      cmAliceDaily.setValue(`# Alice Daily Note\n- [ ] #todo Bob: prepare Q3 report\n  - gather metrics from CRM`);
+      cmAliceDaily.setValue(`# Alice Daily Note\n- [ ] #Bob prepare Q3 report\n  - gather metrics from CRM`);
       cmAliceLog.setValue(`# Alice Transaction Log`);
-      cmBobDaily.setValue(`# Bob Daily Note\n- [ ] #todo Alice: verify vendor invoices`);
+      cmBobDaily.setValue(`# Bob Daily Note\n- [ ] #Alice verify vendor invoices`);
       cmBobLog.setValue(`# Bob Transaction Log`);
 
       let aliceLogCount = 0;
@@ -490,7 +492,7 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
 
       function makeSender(fromCM, toLogCM, fromName, toName){
         return function(lineText, idx){
-          const re = new RegExp(`^([-+*])\\s*\\[(x|-| )\\]\\s*#todo\\s+${toName}:\\s*(.+)`, 'i');
+          const re = new RegExp(`^([-+*])\\s*\\[(x|-| )\\]\\s*#${toName}\\b:?\\s*(.+)`, 'i');
           const m = lineText.match(re);
           if(m && m[2] !== ' '){
             const task = m[3].trim();
@@ -501,13 +503,14 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
               const l = lines[i];
               const ind = (l.match(/^(\\s*)/) || ['',''])[1];
               if(ind.length <= indent.length) break;
-              const ctext = l.trim();
-              context.push('  '+ctext);
+              const ctext = l.trim().replace(/^[-+*]/,'+');
+              const rel = ind.length - indent.length;
+              context.push(' '.repeat(rel) + ctext);
             }
-            let replaced = lineText.replace('#todo','#waiting');
+            let replaced = lineText.replace(`#${toName}`, `#waiting ${toName}:`);
             replaced = setLineState(replaced,'open');
             fromCM.replaceRange(replaced,{line:idx,ch:0},{line:idx,ch:lineText.length});
-            appendToLog(toLogCM, [`+ [ ] #todo ${fromName}: ${task}`, ...context], toName);
+            appendToLog(toLogCM, [`+ [ ] #todo from ${fromName}: ${task}`, ...context], toName);
             if(toName==='Bob') { bobLogCount++; updateBadge('Bob'); }
             else { aliceLogCount++; updateBadge('Alice'); }
           }
@@ -516,7 +519,7 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
 
       function makeCompleter(fromLogCM, toDailyCM, fromName, toName){
         return function(lineText, idx){
-          const re = new RegExp(`^\\+\\s*\\[(x|-)\\]\\s*#todo\\s+${toName}:\\s*(.+)`, 'i');
+          const re = new RegExp(`^\\+\\s*\\[(x|-)\\]\\s*#todo\\s+from\\s+${fromName}:\\s*(.+)`, 'i');
           const m = lineText.match(re);
           if(m && m[1] !== ' '){
             const task = m[2].trim();
@@ -528,15 +531,18 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
               const ind = (l.match(/^(\\s*)/) || ['',''])[1];
               if(ind.length <= indent.length) break;
               const ctext = l.trim().replace(/^[-+*]/,'+');
-              context.push('  '+ctext);
+              const rel = ind.length - indent.length;
+              context.push(' '.repeat(rel) + ctext);
             }
             const doneLine = setLineState(lineText,'done');
             fromLogCM.replaceRange(doneLine,{line:idx,ch:0},{line:idx,ch:lineText.length});
             const targetLines = toDailyCM.getValue().split(/\\r?\\n/);
             for(let j=0;j<targetLines.length;j++){
               if(targetLines[j].includes(`#waiting ${fromName}:`) && targetLines[j].includes(task)){
+                const parentIndent = (targetLines[j].match(/^(\\s*)/) || ['',''])[1];
                 targetLines[j] = setLineState(targetLines[j],'done');
-                targetLines.splice(j+1,0,...context);
+                const prefixed = context.map(l=>parentIndent + l);
+                targetLines.splice(j+1,0,...prefixed);
                 break;
               }
             }
@@ -629,27 +635,41 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
         const daily = person==='Alice'? cmAliceDaily : cmBobDaily;
         const log = person==='Alice'? cmAliceLog : cmBobLog;
         const dash = document.getElementById(person==='Alice'? 'aliceDash':'bobDash');
-        const ul = dash.querySelector('ul');
-        const lines = daily.getValue().split(/\r?\n/).concat(log.getValue().split(/\r?\n/));
-        const items = [];
-        lines.forEach(line=>{
-          const m = line.match(/^(\s*)([-+*])\s*\[( |x|-)\]\s*(.*)/);
-          if(!m) return;
-          const bullet = m[2];
-          const status = m[3]==='x'?'done':m[3]==='-'?'cancelled':'open';
-          const text = m[4];
-          if(/#(todo|waiting)/.test(text)) items.push({bullet,status,text});
-        });
-        ul.innerHTML = items.map(i=>`<li class="${bulletClass(i.bullet)}${i.status!=='open'?' done':''}"><span class="dash-bullet ${bulletClass(i.bullet)}"></span>${i.text}</li>`).join('');
+        const body = dash.querySelector('.dash-body');
+        const items = [
+          ...collectFromNote(person+" Daily", daily.getValue()),
+          ...collectFromNote(person+" Log", log.getValue())
+        ].filter(i=>i.tags.some(t=>t==='todo'||t==='waiting'||t==='alice'||t==='bob'));
+        body.innerHTML = `<table><tbody>${items.map(i=>`<tr class="item ${bulletClass(i.bullet)}${i.status==='done'?' done':''}${i.status==='cancelled'?' cancelled':''}" data-note="${i.source}"><td>${renderMainLine(i)}</td></tr>${i.children.length?`<tr class="details"><td><ul>${i.children.map(renderChildLine).join('')}</ul></td></tr>`:''}`).join('')}</tbody></table>`;
         const totalEl = dash.querySelector('.count-total');
         if(totalEl) totalEl.textContent = items.length;
-        const urgentCount = items.filter(i=>/#urgent/.test(i.text)).length;
+        const urgentCount = items.filter(i=>i.tags.includes('urgent')).length;
         const badgeEl = dash.querySelector('.count-badge');
         if(badgeEl){
           badgeEl.textContent = urgentCount;
           badgeEl.dataset.count = urgentCount;
           badgeEl.style.display = urgentCount>0 && dash.classList.contains('collapsed') ? 'inline-block':'none';
         }
+        body.querySelectorAll('.chk').forEach(cb=>{
+          cb.addEventListener('click',e=>{
+            e.stopPropagation();
+            const note = cb.dataset.note;
+            const line = Number(cb.dataset.line);
+            const state = cb.dataset.state;
+            const next = state==='open'?'done':(state==='done'?'cancelled':'open');
+            const cmTarget = person==='Alice'
+              ? (note.includes('Log')? cmAliceLog : cmAliceDaily)
+              : (note.includes('Log')? cmBobLog : cmBobDaily);
+            const lineText = cmTarget.getLine(line);
+            const newLine = setLineState(lineText, next);
+            cmTarget.replaceRange(newLine,{line, ch:0},{line, ch:lineText.length});
+            requestAnimationFrame(()=>{
+              styleEditorTags(cmTarget); styleBulletLines(cmTarget); styleHeadings(cmTarget); updateEditorWidgets(cmTarget);
+              matchHeights(cmTarget, cmTarget.getTextArea().parentElement.id);
+              updateMiniDash(person);
+            });
+          });
+        });
       }
 
       cmAliceDaily.on('change', ()=>updateMiniDash('Alice'));
