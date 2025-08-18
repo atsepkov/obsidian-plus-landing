@@ -210,6 +210,7 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
 
     const TAG_COLORS = {
       todo:   { bg:'#4b5563', fg:'#ffffff' },
+      waiting:{ bg:'#6b7280', fg:'#ffffff' },
       urgent: { bg:'#ef4444', fg:'#ffffff' },
       music:  { bg:'#6366f1', fg:'#ffffff' },
       payment:{ bg:'#10b981', fg:'#ffffff' },
@@ -465,27 +466,50 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
     function initHandoff(){
       if(initHandoff.ready) return;
       initHandoff.ready = true;
-      const cmAlice = initEditor('aliceInput','alicePreview','aliceEditorWrap');
-      const cmBob = initEditor('bobInput','bobPreview','bobEditorWrap');
+      const cmAlice = initEditor('aliceInput','', 'aliceEditorWrap');
+      const cmBob = initEditor('bobInput','', 'bobEditorWrap');
       cmAlice.setValue(`# Alice Daily Note\n- [ ] #todo Bob: prepare Q3 report\n        - gather metrics from CRM`);
       cmBob.setValue(`# Bob Daily Log`);
       const transfers = [];
-      const sendBtn = document.getElementById('sendToBob');
-      if(sendBtn) sendBtn.addEventListener('click', ()=>{
-        const lines = cmAlice.getValue().split(/\r?\n/);
-        lines.forEach((line, idx)=>{
-          const m = line.match(/^([-+*])\s*\[ \]\s*#todo\s+Bob:\s*(.+)/i);
-          if(m){
-            const task = m[2].trim();
-            lines[idx] = line.replace('#todo','#waiting');
-            const bobLines = cmBob.getValue().split(/\r?\n/);
-            bobLines.push(`+ [ ] #todo Alice: ${task}`);
-            cmBob.setValue(bobLines.join('\n'));
-            transfers.push({task});
+
+      function maybeSend(lineText, idx){
+        const m = lineText.match(/^([-+*])\s*\[(x|-| )\]\s*#todo\s+Bob:\s*(.+)/i);
+        if(m && m[2] !== ' '){
+          const task = m[3].trim();
+          const replaced = lineText.replace('#todo','#waiting');
+          cmAlice.replaceRange(replaced, {line:idx, ch:0}, {line:idx, ch:lineText.length});
+          const bobLines = cmBob.getValue().split(/\r?\n/);
+          bobLines.push(`+ [ ] #todo Alice: ${task}`);
+          cmBob.setValue(bobLines.join('\n'));
+          transfers.push({task});
+        }
+      }
+
+      function setupCheckbox(inst, cb){
+        inst.on('mousedown', (cm,e)=>{
+          const pos = cm.coordsChar({left:e.clientX, top:e.clientY});
+          const line = cm.getLine(pos.line);
+          const idx = line.indexOf('[');
+          if(idx>=0 && pos.ch>=idx && pos.ch<=idx+1){
+            e.preventDefault();
+            const state = line[idx+1];
+            const next = state===' ' ? 'x' : (state==='x' ? '-' : ' ');
+            const newLine = line.slice(0,idx+1)+next+line.slice(idx+2);
+            cm.replaceRange(newLine, {line:pos.line, ch:0}, {line:pos.line, ch:line.length});
+            if(cb) cb(newLine, pos.line);
           }
         });
-        cmAlice.setValue(lines.join('\n'));
-      });
+        inst.on('change',(cm,change)=>{
+          if(change.origin==='+input' && cb){
+            const line = cm.getLine(change.from.line);
+            cb(line, change.from.line);
+          }
+        });
+      }
+
+      setupCheckbox(cmAlice, maybeSend);
+      setupCheckbox(cmBob, null);
+
       cmBob.on('change', ()=>{
         const bobLines = cmBob.getValue().split(/\r?\n/);
         transfers.forEach(t=>{

@@ -106,7 +106,7 @@
     .note-tab.active, .note-tab:hover { border-color:var(--accent); color:var(--accent); }
 
     .scenario-tabs { display:flex; gap:8px; flex-wrap:wrap; }
-    .scenario-tab { font-size:14px; padding:6px 10px; border:1px dashed var(--border); border-radius:var(--radius-md); background:transparent; cursor:pointer; color:var(--text-muted); }
+    .scenario-tab { font-size:16px; padding:6px 10px; border:1px dashed var(--border); border-radius:var(--radius-md); background:transparent; cursor:pointer; color:var(--text-muted); }
     .scenario-tab.active, .scenario-tab:hover { border-color:var(--accent); color:var(--accent); }
 
     table { width: 100%; border-collapse: collapse; }
@@ -194,7 +194,7 @@
     #previewPanel { height:540px; overflow:auto; }
     #editorWrap, #aliceEditorWrap, #bobEditorWrap { flex:1; min-height:400px; }
 
-    #notePreview, #alicePreview, #bobPreview {
+    #notePreview {
       margin-top:8px;
       padding:10px;
       border:1px solid var(--border);
@@ -223,5 +223,5 @@
     /* Responsive */
     @media (max-width: 960px) { .demo-wrap { grid-template-columns: 1fr; } }
 
-.cm-h1 { font-size:24px; font-weight:700; color:var(--accent); }
-.cm-h2 { font-size:16px; font-weight:700; color:var(--accent-strong); }
+.CodeMirror .cm-h1 { font-size:24px !important; font-weight:700 !important; color:var(--accent) !important; }
+.CodeMirror .cm-h2 { font-size:16px !important; font-weight:700 !important; color:var(--accent-strong); }
