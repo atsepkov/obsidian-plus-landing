@@ -34,7 +34,9 @@
 const cm = initEditor('noteInput', 'editorWrap');
 cm.on('change', ()=>requestAnimationFrame(render));
 cm.on('viewportChange', ()=>{ styleEditorTags(cm); styleBulletLines(cm); styleHeadings(cm); updateEditorWidgets(cm); });
-    
+
+let dashState = { Todos:true, Payments:false, Music:true, Monitoring:false };
+
     // === Notes ===
     const SCENARIOS = {
       dashboard: {
@@ -340,9 +342,13 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
       const wraps = containerEl.querySelectorAll('.table-wrap');
       wraps.forEach(wrap=>{
         const header = wrap.querySelector('.dash-header');
-        header.addEventListener('click',()=>{wrap.classList.toggle('collapsed'); updateBadgeVisibility(wrap);});
         const title = header.querySelector('.dash-title').textContent.trim();
-        if(title==='Todos' || title==='Music') wrap.classList.add('collapsed');
+        header.addEventListener('click',()=>{
+          wrap.classList.toggle('collapsed');
+          dashState[title] = wrap.classList.contains('collapsed');
+          updateBadgeVisibility(wrap);
+        });
+        if(dashState[title]) wrap.classList.add('collapsed');
         if(title==='Todos') setBadge(wrap, todoAlerts);
         if(title==='Monitoring') setBadge(wrap, monitoringErrors);
         updateBadgeVisibility(wrap);
@@ -456,12 +462,12 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
           const m = lineText.match(re);
           if(m && m[2] !== ' '){
             const task = m[3].trim();
-            const indent = lineText.match(/^(\\s*)/)[1];
+            const indent = (lineText.match(/^(\\s*)/) || ['',''])[1];
             const lines = fromCM.getValue().split(/\\r?\\n/);
             const context = [];
             for(let i=idx+1;i<lines.length;i++){
               const l = lines[i];
-              const ind = l.match(/^(\\s*)/)[1];
+              const ind = (l.match(/^(\\s*)/) || ['',''])[1];
               if(ind.length <= indent.length) break;
               const ctext = l.trim().replace(/^[-+*]/,'+');
               context.push('  '+ctext);
