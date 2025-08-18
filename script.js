@@ -541,17 +541,24 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
           const m = lineText.match(re);
           if(m && m[1] !== ' '){
             const task = m[2].trim();
-            const context = collectChildLines(fromLogCM, idx).filter(o=>o.bullet !== '+').map(o=>' '.repeat(o.indent) + '+ ' + o.text);
-            const doneLine = setLineState(lineText,'done');
-            fromLogCM.replaceRange(doneLine,{line:idx,ch:0},{line:idx,ch:lineText.length});
+            const state = m[1] === 'x' ? 'done' : 'cancelled';
+            const context = collectChildLines(fromLogCM, idx)
+              .filter(o=>o.bullet !== '+')
+              .map(o=>' '.repeat(o.indent) + (state==='done'?'+':'*') + ' ' + o.text);
+            const newLine = setLineState(lineText, state);
+            fromLogCM.replaceRange(newLine,{line:idx,ch:0},{line:idx,ch:lineText.length});
             const targetLines = toDailyCM.getValue().split(/\r?\n/);
             for(let j=0;j<targetLines.length;j++){
               if(targetLines[j].includes(`#waiting ${recipientName}:`) && targetLines[j].includes(task)){
                 const parentIndent = (targetLines[j].match(/^\s*/) || ['',''])[0];
-                targetLines[j] = setLineState(targetLines[j],'done');
+                targetLines[j] = setLineState(targetLines[j], state);
                 let insertAt = j + 1;
                 const childIndent = parentIndent + '  ';
-                while(insertAt < targetLines.length && targetLines[insertAt].startsWith(childIndent)) insertAt++;
+                while(insertAt < targetLines.length && targetLines[insertAt].startsWith(childIndent)){
+                  const ch = targetLines[insertAt].charAt(childIndent.length);
+                  if(ch === '+' || ch === '*') targetLines.splice(insertAt,1);
+                  else insertAt++;
+                }
                 const prefixed = context.map(l=>parentIndent + l);
                 targetLines.splice(insertAt,0,...prefixed);
                 break;
