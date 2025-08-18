@@ -498,7 +498,7 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
 
       function setupCheckbox(inst, cb){
         function refresh(){
-          if(inst._chkWidgets){ inst._chkWidgets.forEach(w=>w.clear()); }
+          if(inst._chkWidgets){ inst._chkWidgets.forEach(w=>w.remove()); }
           inst._chkWidgets = [];
           inst.eachLine(line=>{
             const text = line.text;
@@ -522,10 +522,10 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
                 refresh();
                 if(cb) cb(newLine, lineNo);
               });
-              const w = inst.addWidget({line:inst.getLineNumber(line), ch:idx}, box);
-              inst._chkWidgets.push(w);
-            }
-          });
+                inst.addWidget({line:inst.getLineNumber(line), ch:idx}, box);
+                inst._chkWidgets.push(box);
+              }
+            });
         }
         inst.on('change',(cm,change)=>{
           if(change.origin==='+input' && cb){
