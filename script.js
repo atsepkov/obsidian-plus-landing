@@ -467,6 +467,12 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
       cmAliceLog.setValue(`# Alice Transaction Log`);
       cmBobDaily.setValue(`# Bob Daily Note\n- [ ] #Alice verify vendor invoices`);
       cmBobLog.setValue(`# Bob Transaction Log`);
+      requestAnimationFrame(()=>{
+        [cmAliceDaily, cmAliceLog, cmBobDaily, cmBobLog].forEach(cm=>{
+          styleEditorTags(cm); styleBulletLines(cm); styleHeadings(cm); updateEditorWidgets(cm);
+          matchHeights(cm, cm.getTextArea().parentElement.id);
+        });
+      });
 
       let aliceLogCount = 0;
       let bobLogCount = 0;
@@ -544,8 +550,11 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
             }
             toDailyCM.setValue(targetLines.join('\n'));
             requestAnimationFrame(()=>{
+              styleEditorTags(fromLogCM); styleBulletLines(fromLogCM); styleHeadings(fromLogCM); updateEditorWidgets(fromLogCM);
+              matchHeights(fromLogCM, fromLogCM.getTextArea().parentElement.id);
               styleEditorTags(toDailyCM); styleBulletLines(toDailyCM); styleHeadings(toDailyCM); updateEditorWidgets(toDailyCM);
               matchHeights(toDailyCM, toDailyCM.getTextArea().parentElement.id);
+              updateMiniDash(fromName);
               updateMiniDash(toName);
             });
           }
