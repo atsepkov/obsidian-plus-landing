@@ -191,10 +191,8 @@
 .chk[data-state="cancelled"]::after { content:'\2717'; position:absolute; top:-2px; left:2px; color:var(--danger); font-size:14px; }
 
 .cm-hover-checkbox {
-  position:absolute;
   width:16px;
   height:16px;
-  display:none;
   cursor:pointer;
 }
 

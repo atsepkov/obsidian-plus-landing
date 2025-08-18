@@ -476,76 +476,66 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
         const m = lineText.match(/^([-+*])\s*\[(x|-| )\]\s*#todo\s+Bob:\s*(.+)/i);
         if(m && m[2] !== ' '){
           const task = m[3].trim();
-          const replaced = lineText.replace('#todo','#waiting');
+          const indent = lineText.match(/^(\s*)/)[1];
+          const aliceLines = cmAlice.getValue().split(/\r?\n/);
+          const context = [];
+          for(let i=idx+1;i<aliceLines.length;i++){
+            const l = aliceLines[i];
+            const ind = l.match(/^(\s*)/)[1];
+            if(ind.length <= indent.length) break;
+            context.push('  '+l.trim());
+          }
+          let replaced = lineText.replace('#todo','#waiting');
+          replaced = setLineState(replaced,'open');
           cmAlice.replaceRange(replaced, {line:idx, ch:0}, {line:idx, ch:lineText.length});
           const bobLines = cmBob.getValue().split(/\r?\n/);
           bobLines.push(`+ [ ] #todo Alice: ${task}`);
+          context.forEach(c=>bobLines.push(c));
           cmBob.setValue(bobLines.join('\n'));
-          transfers.push({task});
+          transfers.push({task, contextLines:context.length});
         }
       }
 
       function setupCheckbox(inst, cb){
-        const wrapper = inst.getWrapperElement();
-        const hover = document.createElement('input');
-        hover.type = 'checkbox';
-        hover.className = 'cm-hover-checkbox';
-        wrapper.appendChild(hover);
-
-        function hide(){ hover.style.display = 'none'; }
-        wrapper.addEventListener('mouseleave', hide);
-        inst.on('scroll', hide);
-
-        hover.addEventListener('mousedown', ev => {
-          ev.preventDefault();
-          const pos = hover._pos;
-          const line = inst.getLine(pos.line);
-          const idx = line.indexOf('[');
-          const state = line[idx+1];
-          const next = state===' ' ? 'x' : (state==='x' ? '-' : ' ');
-          const newLine = line.slice(0,idx+1)+next+line.slice(idx+2);
-          inst.replaceRange(newLine, {line:pos.line, ch:0}, {line:pos.line, ch:line.length});
-          hide();
-          if(cb) cb(newLine, pos.line);
-        });
-
-        wrapper.addEventListener('mousemove', e => {
-          const pos = inst.coordsChar({left:e.clientX, top:e.clientY});
-          const line = inst.getLine(pos.line);
-          const idx = line.indexOf('[');
-          if(idx>=0 && pos.ch>=idx && pos.ch<=idx+1){
-            const coords = inst.charCoords({line:pos.line, ch:idx}, 'page');
-            const rect = wrapper.getBoundingClientRect();
-            hover.style.left = (coords.left - rect.left) + 'px';
-            hover.style.top = (coords.top - rect.top) + 'px';
-            hover.checked = line[idx+1] === 'x';
-            hover.style.display = 'block';
-            hover._pos = {line:pos.line};
-          }else{
-            hide();
-          }
-        });
-
-        inst.on('mousedown', (cm,e)=>{
-          const pos = cm.coordsChar({left:e.clientX, top:e.clientY});
-          const line = cm.getLine(pos.line);
-          const idx = line.indexOf('[');
-          if(idx>=0 && pos.ch>=idx && pos.ch<=idx+1){
-            e.preventDefault();
-            const state = line[idx+1];
-            const next = state===' ' ? 'x' : (state==='x' ? '-' : ' ');
-            const newLine = line.slice(0,idx+1)+next+line.slice(idx+2);
-            cm.replaceRange(newLine, {line:pos.line, ch:0}, {line:pos.line, ch:line.length});
-            if(cb) cb(newLine, pos.line);
-          }
-        });
-
+        function refresh(){
+          if(inst._chkWidgets){ inst._chkWidgets.forEach(w=>w.clear()); }
+          inst._chkWidgets = [];
+          inst.eachLine(line=>{
+            const text = line.text;
+            const idx = text.indexOf('[');
+            if(idx>=0 && /\[( |x|-)\]/.test(text.slice(idx,idx+3))){
+              const box = document.createElement('input');
+              box.type = 'checkbox';
+              box.className = 'cm-hover-checkbox';
+              const state = text[idx+1];
+              box.checked = state==='x';
+              box.indeterminate = state==='-';
+              box.addEventListener('mousedown', e=>{
+                e.preventDefault();
+                const lineNo = inst.getLineNumber(line);
+                const lineText = inst.getLine(lineNo);
+                const curIdx = lineText.indexOf('[');
+                const curState = lineText[curIdx+1];
+                const next = curState===' ' ? 'x' : (curState==='x' ? '-' : ' ');
+                const newLine = lineText.slice(0,curIdx+1)+next+lineText.slice(curIdx+2);
+                inst.replaceRange(newLine, {line:lineNo, ch:0}, {line:lineNo, ch:lineText.length});
+                refresh();
+                if(cb) cb(newLine, lineNo);
+              });
+              const w = inst.addWidget({line:inst.getLineNumber(line), ch:idx}, box);
+              inst._chkWidgets.push(w);
+            }
+          });
+        }
         inst.on('change',(cm,change)=>{
           if(change.origin==='+input' && cb){
             const line = cm.getLine(change.from.line);
             cb(line, change.from.line);
           }
+          refresh();
         });
+        inst.on('viewportChange', refresh);
+        refresh();
       }
 
       setupCheckbox(cmAlice, maybeSend);
@@ -582,20 +572,24 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
             clearTimeout(t.timer);
             t.timer = setTimeout(()=>{
               const indent = line.match(/^\s*/)[0].length;
-              const comments=[];
+              let comments=[];
               for(let i=idx+1;i<bobLines.length;i++){
                 const l = bobLines[i];
                 const ind = l.match(/^\s*/)[0].length;
                 if(ind<=indent) break;
                 comments.push(l.trim().replace(/^[-+*]/,'+'));
               }
+              comments = comments.slice(t.contextLines||0);
               const aliceLines = cmAlice.getValue().split(/\r?\n/);
               let aidx = aliceLines.findIndex(l=>l.includes('#waiting') && l.includes(t.task));
               if(aidx!==-1){
                 aliceLines[aidx] = setLineState(aliceLines[aidx], status);
+                const baseIndent = aliceLines[aidx].match(/^\s*/)[0];
+                let insertPos = aidx+1;
+                while(insertPos<aliceLines.length && aliceLines[insertPos].match(/^\s*/)[0].length>baseIndent.length) insertPos++;
                 if(comments.length){
-                  const prefix = aliceLines[aidx].match(/^\s*/)[0]+'  ';
-                  comments.forEach(c=>aliceLines.splice(++aidx,0,prefix+c));
+                  const prefix = baseIndent+'  ';
+                  comments.forEach(c=>aliceLines.splice(insertPos++,0,prefix+c));
                 }
                 cmAlice.setValue(aliceLines.join('\n'));
               }
