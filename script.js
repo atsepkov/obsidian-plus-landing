@@ -25,8 +25,8 @@
             return ch === '+' ? 'bullet-plus' : (ch === '*' ? 'bullet-star' : 'bullet-dash');
           }
         }
-        if (stream.match(/#[A-Za-z0-9_-]+/)) return 'tag';
-        // while (stream.next() != null && !stream.match(/#[A-Za-z0-9_-]+/, false)) {}
+        const m = stream.match(/#[A-Za-z0-9_-]+/);
+        if (m) return 'tag tag-' + m[0].slice(1).toLowerCase();
         stream.next();
         return null;
       }
@@ -224,6 +224,10 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
       bob:    { bg:'#f59e0b', fg:'#ffffff' }
     };
 
+    const TAG_STYLE_EL = document.createElement('style');
+    TAG_STYLE_EL.textContent = Object.entries(TAG_COLORS).map(([k,{bg,fg}])=>`.cm-tag-${k}{background:${bg};color:${fg};}`).join('');
+    document.head.appendChild(TAG_STYLE_EL);
+
     function tagStyles(str){
       return TAG_COLORS[str.toLowerCase()] || { bg:'#94a3b8', fg:'#ffffff' };
     }
@@ -259,10 +263,8 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
     function styleEditorTags(inst){
       const tags = inst.getWrapperElement().querySelectorAll('.cm-tag');
       tags.forEach(el=>{
-        const clean = el.textContent.replace('#','');
-        const {bg,fg} = tagStyles(clean);
-        el.style.background = bg;
-        el.style.color = fg;
+        const clean = el.textContent.replace('#','').toLowerCase();
+        el.classList.add('cm-tag-' + clean);
       });
     }
 
@@ -506,8 +508,10 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
           if(l.trim()==='') continue;
           if(ind <= baseIndent) break;
           const rel = ind - baseIndent;
-          const ctext = l.trim().replace(/^[-+*]/,'+');
-          out.push(' '.repeat(rel) + ctext);
+          const trimmed = l.trim();
+          const bullet = /^[-+*]/.test(trimmed) ? trimmed.charAt(0) : '';
+          const text = trimmed.replace(/^[-+*]\s*/, '');
+          out.push({ indent: rel, bullet, text });
         }
         return out;
       }
@@ -518,7 +522,7 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
           const m = lineText.match(re);
           if(m && m[2] !== ' '){
             const task = m[3].trim();
-            const context = collectChildLines(fromCM, idx);
+            const context = collectChildLines(fromCM, idx).filter(o=>o.bullet !== '+').map(o=>' '.repeat(o.indent) + '+ ' + o.text);
             let replaced = lineText.replace(`#${toName}`, `#waiting ${toName}:`);
             replaced = setLineState(replaced,'open');
             fromCM.replaceRange(replaced,{line:idx,ch:0},{line:idx,ch:lineText.length});
@@ -535,7 +539,7 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
           const m = lineText.match(re);
           if(m && m[1] !== ' '){
             const task = m[2].trim();
-            const context = collectChildLines(fromLogCM, idx);
+            const context = collectChildLines(fromLogCM, idx).filter(o=>o.bullet !== '+').map(o=>' '.repeat(o.indent) + '+ ' + o.text);
             const doneLine = setLineState(lineText,'done');
             fromLogCM.replaceRange(doneLine,{line:idx,ch:0},{line:idx,ch:lineText.length});
             const targetLines = toDailyCM.getValue().split(/\r?\n/);
@@ -543,8 +547,11 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
               if(targetLines[j].includes(`#waiting ${recipientName}:`) && targetLines[j].includes(task)){
                 const parentIndent = (targetLines[j].match(/^\s*/) || ['',''])[0];
                 targetLines[j] = setLineState(targetLines[j],'done');
+                let insertAt = j + 1;
+                const childIndent = parentIndent + '  ';
+                while(insertAt < targetLines.length && targetLines[insertAt].startsWith(childIndent)) insertAt++;
                 const prefixed = context.map(l=>parentIndent + l);
-                targetLines.splice(j+1,0,...prefixed);
+                targetLines.splice(insertAt,0,...prefixed);
                 break;
               }
             }
