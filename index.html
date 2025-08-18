@@ -134,9 +134,13 @@
       font-weight:700;
       margin:3px 8px;
     }
-    .dash-header .arrow { transition:transform .2s; }
+    .dash-header .arrow {
+      transition:transform .2s;
+      display:inline-block;
+      transform:rotate(90deg);
+    }
     .table-wrap.collapsed .dash-body { display:none; }
-    .table-wrap.collapsed .dash-header .arrow { transform:rotate(-90deg); }
+    .table-wrap.collapsed .dash-header .arrow { transform:rotate(0); }
 
     .dash-bullet {
       display:inline-block;
@@ -148,6 +152,19 @@
     .dash-bullet.plus { background:#3b82f6; }
     .dash-bullet.star { background:#ef4444; }
     .dash-bullet.dash { background:var(--text-normal); }
+
+    .item.plus, li.plus { color:#3b82f6; }
+    .item.star, li.star { color:#ef4444; }
+    .item.dash, li.dash { color:var(--text-normal); }
+    .item.done, li.done,
+    .item.cancelled, li.cancelled { opacity:0.6; }
+
+    .table-wrap table { table-layout:fixed; width:100%; }
+    .table-wrap td { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .table-wrap tr.item:hover td { white-space:normal; overflow:visible; }
+
+    .feature ul { margin:0; padding-left:20px; }
+    .feature ul li { margin-bottom:4px; }
 
     .badge {
       display:inline-block; color:#fff; padding:0px 5px; border-radius:10px; font-size:12px;
@@ -213,7 +230,7 @@
       </div>
       <nav>
         <a href="#story">Story</a>
-        <a href="#use-cases">Use cases</a>
+        <a href="#systems">Systems</a>
         <a href="#demo">Live demo</a>
         <a href="#download">Download</a>
         <a id="themeToggle" class="pill" href="#">Toggle <span class="kbd">⌘/Ctrl</span> + <span class="kbd">D</span></a>
@@ -237,7 +254,7 @@
         <div class="cta">
           <a href="#demo" class="btn primary">▶ Try the Live Demo</a>
           <a href="#download" class="btn">⬇ Get the Starter Vault</a>
-          <a href="#use-cases" class="btn ghost">📚 See Use Cases</a>
+          <a href="#systems" class="btn ghost">📚 Supported Systems</a>
         </div>
         <!-- <div class="proof">
           <div class="meter">⚡ Saves ~4–6 hrs/week</div>
@@ -274,15 +291,32 @@
       </div>
     </section>
 
-    <!-- USE CASES -->
-    <section id="use-cases">
+    <!-- SYSTEMS -->
+    <section id="systems">
       <div class="container">
-        <h2>How it actually feels in a real vault</h2>
-        <p class="sub">Three slices from my workflow, mirrored by the live demo below.</p>
+        <h2>Works with any system</h2>
+        <p class="sub">GTD, EOS, or something uniquely yours — Obsidian+ adapts to whatever methodology drives you.</p>
         <div class="grid features" style="margin-top:18px;">
-          <div class="feature card"><h3>Daily note → Notes & Tasks</h3><p>Free-form jotting in <em>Notes & Tasks</em> (hashtags + dates inline). The plugin parses as you type and routes items where they belong.</p></div>
-          <div class="feature card"><h3>Top-of-note Dashboard</h3><p>A lightweight overview at the top of the daily note: counts by tag (#todo, #waiting, #urgent) and a short list of upcoming items.</p></div>
-          <div class="feature card"><h3>Music library from notes</h3><p>Lines tagged <code>#music</code> (optionally with a date + URL) roll into a curated “Music” view with search and quick open.</p></div>
+          <div class="feature card">
+            <h3>Getting Things Done</h3>
+            <ul>
+              <li>Inbox capture</li>
+              <li>Next actions & contexts</li>
+              <li>Projects & weekly review</li>
+            </ul>
+          </div>
+          <div class="feature card">
+            <h3>EOS from Traction</h3>
+            <ul>
+              <li>Scorecards & Rocks</li>
+              <li>Level 10 meetings</li>
+              <li>Issues list & V/TO</li>
+            </ul>
+          </div>
+          <div class="feature card">
+            <h3>Your own system</h3>
+            <p>Mix and match tags, fields, and automations to model any workflow you can imagine.</p>
+          </div>
         </div>
       </div>
     </section>
@@ -567,8 +601,8 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
 
     function tableHTML(title, items){
       if(!items.length) return '';
-      return `<div class="card table-wrap"><div class="dash-header">${title}<span class="arrow">▾</span></div><div class="dash-body"><table><tbody>${
-        items.map(i=>`<tr class="item" data-note="${i.source}"><td>${renderMainLine(i)}</td></tr>${i.children.length?`<tr class="details"><td><ul>${i.children.map(renderChildLine).join('')}</ul></td></tr>`:''}`).join('')
+      return `<div class="card table-wrap"><div class="dash-header">${title}<span class="arrow">›</span></div><div class="dash-body"><table><tbody>${
+        items.map(i=>`<tr class="item ${bulletClass(i.bullet)}${i.status==='done'?' done':''}${i.status==='cancelled'?' cancelled':''}" data-note="${i.source}"><td>${renderMainLine(i)}</td></tr>${i.children.length?`<tr class="details"><td><ul>${i.children.map(renderChildLine).join('')}</ul></td></tr>`:''}`).join('')
       }</tbody></table></div></div>`;
     }
 
@@ -639,10 +673,11 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
       const monitoring = items.filter(i=>i.view === 'monitoring');
       containerEl.innerHTML = tableHTML('Todos', todos) + tableHTML('Payments', payments) + tableHTML('Music', music) + tableHTML('Monitoring', monitoring);
       const wraps = containerEl.querySelectorAll('.table-wrap');
-      wraps.forEach((wrap,i)=>{
+      wraps.forEach(wrap=>{
         const header = wrap.querySelector('.dash-header');
         header.addEventListener('click',()=>wrap.classList.toggle('collapsed'));
-        if(i>0) wrap.classList.add('collapsed');
+        const title = header.textContent.trim();
+        if(title==='Todos' || title==='Music') wrap.classList.add('collapsed');
       });
       containerEl.querySelectorAll('tr.item').forEach(row=>{
         row.addEventListener('click',()=>{
@@ -711,7 +746,7 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
     }
 
     function renderMainLine(i){
-      const bullet = `<span class="dash-bullet ${bulletClass(i.bullet)}"></span>`;
+      const bullet = i.view === 'task' ? '' : `<span class="dash-bullet ${bulletClass(i.bullet)}"></span>`;
       const checkbox = i.view === 'task' ? `<span class="chk" data-note="${i.source}" data-line="${i.line}" data-state="${i.status}"></span> ` : '';
       const tags = i.tags.map(t=>badge('#'+t)).join(' ');
       const statusIcon = i.status==='done' ? '✅' : (i.status==='cancelled' ? '❌' : '');
@@ -730,7 +765,7 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
       const tags = c.tags.map(t=>badge('#'+t)).join(' ');
       const due = c.due?` <span class="due">${c.due}</span>`:'';
       const url = c.url?` <a href="${c.url}" target="_blank">${c.url}</a>`:'';
-      return `<li>${bullet}${tags} ${c.text}${due}${url}</li>`;
+      return `<li class="${bulletClass(c.bullet)}${c.status==='done'?' done':''}${c.status==='cancelled'?' cancelled':''}">${bullet}${tags} ${c.text}${due}${url}</li>`;
     }
 
     // Footer year + theme how-to
