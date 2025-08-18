@@ -126,7 +126,7 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
     const noteTabs = document.querySelectorAll('.note-tab');
     const SCENARIO_DESCS = {
       dashboard: "Jordan manages several rentals. He spends a lot of time on the go, with his phone. He's a big proponent of GTD, but struggled to implement it in an electronic form. No tool was flexible enough, and most fell apart if system wasn't followed religiously. With Obsidian+, the data organizes itself. Now his daily notes are his inbox basket. His properties are his projects, marking something with a tag flags it important, everything else becomes reference. Jordan can quickly see who paid the rent and if there is a water leak. Problems surface to the top before they become emergencies.",
-      handoff: 'Alice and Bob are coworkers using linked notebooks to pass tasks in both directions. Send items between their notes and watch responses flow back.'
+      handoff: 'Alice and Bob are coworkers sharing linked notebooks. Check a #todo with your teammate\'s name to send it to their Transaction Log so nothing falls through the cracks.'
     };
     scenarioDescEl.textContent = SCENARIO_DESCS.dashboard;
     scenarioTabs.forEach(tab=>{
@@ -450,13 +450,36 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
     function initHandoff(){
       if(initHandoff.ready) return;
       initHandoff.ready = true;
-      const cmAlice = initEditor('aliceInput', 'aliceEditorWrap');
-      const cmBob = initEditor('bobInput', 'bobEditorWrap');
-      cmAlice.setValue(`# Alice Daily Note\n- [ ] #todo Bob: prepare Q3 report\n  - gather metrics from CRM`);
-      cmBob.setValue(`# Bob Daily Log\n- [ ] #todo Alice: verify vendor invoices`);
-      const transfers = [];
+      const cmAliceDaily = initEditor('aliceDaily', 'aliceDailyWrap');
+      const cmAliceLog = initEditor('aliceLog', 'aliceLogWrap');
+      const cmBobDaily = initEditor('bobDaily', 'bobDailyWrap');
+      const cmBobLog = initEditor('bobLog', 'bobLogWrap');
+      cmAliceDaily.setValue(`# Alice Daily Note\n- [ ] #todo Bob: prepare Q3 report\n  - gather metrics from CRM`);
+      cmAliceLog.setValue(`# Alice Transaction Log`);
+      cmBobDaily.setValue(`# Bob Daily Note\n- [ ] #todo Alice: verify vendor invoices`);
+      cmBobLog.setValue(`# Bob Transaction Log`);
 
-      function makeSender(fromCM, toCM, fromName, toName){
+      let aliceLogCount = 0;
+      let bobLogCount = 0;
+
+      function updateBadge(person){
+        const badge = document.getElementById(person==='Alice'? 'aliceLogBadge' : 'bobLogBadge');
+        const count = person==='Alice'? aliceLogCount : bobLogCount;
+        badge.textContent = count;
+        badge.style.display = count>0 ? 'inline-block' : 'none';
+      }
+
+      function appendToLog(cmLog, lines, person){
+        const arr = cmLog.getValue().split(/\r?\n/);
+        if(arr.length && arr[arr.length-1].trim()!=='') arr.push('');
+        arr.push(...lines);
+        cmLog.setValue(arr.join('\n'));
+        requestAnimationFrame(()=>{
+          styleEditorTags(cmLog); styleBulletLines(cmLog); styleHeadings(cmLog); updateEditorWidgets(cmLog); updateMiniDash(person);
+        });
+      }
+
+      function makeSender(fromCM, toLogCM, fromName, toName){
         return function(lineText, idx){
           const re = new RegExp(`^([-+*])\\s*\\[(x|-| )\\]\\s*#todo\\s+${toName}:\\s*(.+)`, 'i');
           const m = lineText.match(re);
@@ -475,17 +498,9 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
             let replaced = lineText.replace('#todo','#waiting');
             replaced = setLineState(replaced,'open');
             fromCM.replaceRange(replaced,{line:idx,ch:0},{line:idx,ch:lineText.length});
-            const targetLines = toCM.getValue().split(/\r?\n/);
-            targetLines.push(`+ [ ] #todo ${fromName}: ${task}`);
-            context.forEach(c=>targetLines.push(c));
-            toCM.setValue(targetLines.join('\n'));
-            requestAnimationFrame(()=>{
-              styleEditorTags(toCM);
-              styleBulletLines(toCM);
-              styleHeadings(toCM);
-              updateEditorWidgets(toCM);
-            });
-            transfers.push({from:fromName,to:toName,task,contextLines:context.length});
+            appendToLog(toLogCM, [`+ [ ] #todo ${fromName}: ${task}`, ...context], toName);
+            if(toName==='Bob') { bobLogCount++; updateBadge('Bob'); }
+            else { aliceLogCount++; updateBadge('Alice'); }
           }
         };
       }
@@ -532,81 +547,88 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
         refresh();
       }
 
-      const sendFromAlice = makeSender(cmAlice, cmBob, 'Alice', 'Bob');
-      const sendFromBob = makeSender(cmBob, cmAlice, 'Bob', 'Alice');
-      setupCheckbox(cmAlice, sendFromAlice);
-      setupCheckbox(cmBob, sendFromBob);
+      const sendFromAlice = makeSender(cmAliceDaily, cmBobLog, 'Alice', 'Bob');
+      const sendFromBob = makeSender(cmBobDaily, cmAliceLog, 'Bob', 'Alice');
+      setupCheckbox(cmAliceDaily, sendFromAlice);
+      setupCheckbox(cmBobDaily, sendFromBob);
+      setupCheckbox(cmAliceLog);
+      setupCheckbox(cmBobLog);
 
-      cmBob.addKeyMap({
-        Enter: function(cm){
-          const pos = cm.getCursor();
-          const line = cm.getLine(pos.line);
-          const baseIndent = line.match(/^(\s*)/)[1];
-          const trimmed = line.slice(baseIndent.length);
-          if(!trimmed.startsWith('+') && !trimmed.startsWith('-')){
-            cm.replaceRange('\n', pos, pos, '+input');
-            return;
-          }
-          let indent = baseIndent;
-          if(trimmed.startsWith('+')) indent += '  ';
-          const prefix = indent + '- ';
-          cm.replaceRange('\n'+prefix, {line:pos.line, ch:line.length}, {line:pos.line, ch:line.length}, '+input');
-          cm.setCursor({line:pos.line+1, ch:prefix.length});
-        }
-      });
-
-      function watchResponses(from, to){
-        const cmFrom = from==='Alice'?cmAlice:cmBob;
-        const cmTo = from==='Alice'?cmBob:cmAlice;
-        cmTo.on('change', ()=>{
-          const lines = cmTo.getValue().split(/\r?\n/);
-          transfers.forEach(t=>{
-            if(t.sent || t.from!==from || t.to!==to) return;
-            const idx = lines.findIndex(line=>line.includes(`#todo ${from}:`) && line.includes(t.task));
-            if(idx===-1) return;
-            const line = lines[idx];
-            const statusChar = (line.match(/\[( |x|-)\]/)||[])[1]||' ';
-            const status = statusChar==='x'?'done':statusChar==='-'?'cancelled':'open';
-            if(status!=='open'){
-              clearTimeout(t.timer);
-              t.timer = setTimeout(()=>{
-                const indent = line.match(/^\s*/)[0].length;
-                let comments=[];
-                for(let i=idx+1;i<lines.length;i++){
-                  const l = lines[i];
-                  const ind = l.match(/^\s*/)[0].length;
-                  if(ind<=indent) break;
-                  comments.push(l.trim().replace(/^[-+*]/,'+'));
-                }
-                comments = comments.slice(t.contextLines||0);
-                const srcLines = cmFrom.getValue().split(/\r?\n/);
-                let sidx = srcLines.findIndex(l=>l.includes('#waiting') && l.includes(t.task));
-                if(sidx!==-1){
-                  srcLines[sidx] = setLineState(srcLines[sidx], status);
-                  const baseIndent = srcLines[sidx].match(/^\s*/)[0];
-                  let insertPos = sidx+1;
-                  while(insertPos<srcLines.length && srcLines[insertPos].match(/^\s*/)[0].length>baseIndent.length) insertPos++;
-                  if(comments.length){
-                    const prefix = baseIndent+'  ';
-                    comments.forEach(c=>srcLines.splice(insertPos++,0,prefix+c));
-                  }
-                  cmFrom.setValue(srcLines.join('\n'));
-                  requestAnimationFrame(()=>{
-                    styleEditorTags(cmFrom);
-                    styleBulletLines(cmFrom);
-                    styleHeadings(cmFrom);
-                    updateEditorWidgets(cmFrom);
-                  });
-                }
-                t.sent = true;
-              },400);
+      function addEnterKey(cm){
+        cm.addKeyMap({
+          Enter: function(inst){
+            const pos = inst.getCursor();
+            const line = inst.getLine(pos.line);
+            const baseIndent = line.match(/^(\s*)/)[1];
+            const trimmed = line.slice(baseIndent.length);
+            if(!trimmed.startsWith('+') && !trimmed.startsWith('-')){
+              inst.replaceRange('\n', pos, pos, '+input');
+              return;
             }
+            let indent = baseIndent;
+            if(trimmed.startsWith('+')) indent += '  ';
+            const prefix = indent + '- ';
+            inst.replaceRange('\n'+prefix, {line:pos.line, ch:line.length}, {line:pos.line, ch:line.length}, '+input');
+            inst.setCursor({line:pos.line+1, ch:prefix.length});
+          }
+        });
+      }
+      addEnterKey(cmAliceDaily);
+      addEnterKey(cmBobDaily);
+
+      function updateMiniDash(person){
+        const daily = person==='Alice'? cmAliceDaily : cmBobDaily;
+        const log = person==='Alice'? cmAliceLog : cmBobLog;
+        const dash = document.getElementById(person==='Alice'? 'aliceDash':'bobDash');
+        const ul = dash.querySelector('ul');
+        const lines = daily.getValue().split(/\r?\n/).concat(log.getValue().split(/\r?\n/));
+        const items = [];
+        lines.forEach(line=>{
+          const m = line.match(/^(\s*)([-+*])\s*\[( |x|-)\]\s*(.*)/);
+          if(!m) return;
+          const bullet = m[2];
+          const status = m[3]==='x'?'done':m[3]==='-'?'cancelled':'open';
+          const text = m[4];
+          if(/#(todo|waiting)/.test(text)) items.push({bullet,status,text});
+        });
+        ul.innerHTML = items.map(i=>`<li class="${bulletClass(i.bullet)}${i.status!=='open'?' done':''}"><span class="dash-bullet ${bulletClass(i.bullet)}"></span>${i.text}</li>`).join('');
+      }
+
+      cmAliceDaily.on('change', ()=>updateMiniDash('Alice'));
+      cmAliceLog.on('change', ()=>updateMiniDash('Alice'));
+      cmBobDaily.on('change', ()=>updateMiniDash('Bob'));
+      cmBobLog.on('change', ()=>updateMiniDash('Bob'));
+
+      updateMiniDash('Alice');
+      updateMiniDash('Bob');
+
+      function setupTabs(panelId, person){
+        const panel = document.getElementById(panelId);
+        const tabs = panel.querySelectorAll('.note-tab');
+        tabs.forEach(btn=>{
+          btn.addEventListener('click',()=>{
+            tabs.forEach(b=>b.classList.toggle('active', b===btn));
+            const wraps = panel.querySelectorAll('[id$="Wrap"]');
+            wraps.forEach(w=>w.style.display='none');
+            document.getElementById(btn.dataset.wrap).style.display='block';
+            if(btn.dataset.wrap.endsWith('LogWrap')){
+              if(person==='Alice'){ aliceLogCount=0; updateBadge('Alice'); }
+              else { bobLogCount=0; updateBadge('Bob'); }
+            }
+            updateEditorWidgets(cmAliceDaily); updateEditorWidgets(cmAliceLog); updateEditorWidgets(cmBobDaily); updateEditorWidgets(cmBobLog);
           });
         });
       }
-
-      watchResponses('Alice','Bob');
-      watchResponses('Bob','Alice');
+      setupTabs('alicePanel','Alice');
+      setupTabs('bobPanel','Bob');
+      ['aliceDash','bobDash'].forEach(id=>{
+        const wrap = document.getElementById(id);
+        if(!wrap) return;
+        const header = wrap.querySelector('.dash-header');
+        header.addEventListener('click',()=>{
+          wrap.classList.toggle('collapsed');
+        });
+      });
     }
 
     // Footer year + theme how-to
