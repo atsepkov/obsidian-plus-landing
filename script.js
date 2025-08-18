@@ -31,9 +31,9 @@
         return null;
       }
     };
-    const cm = initEditor('noteInput', 'notePreview', 'editorWrap');
-    cm.on('change', ()=>requestAnimationFrame(render));
-    cm.on('viewportChange', ()=>{ styleEditorTags(cm); styleBulletLines(cm); styleHeadings(cm); updateEditorWidgets(cm); renderNotePreview(cm, 'notePreview'); });
+const cm = initEditor('noteInput', 'editorWrap');
+cm.on('change', ()=>requestAnimationFrame(render));
+cm.on('viewportChange', ()=>{ styleEditorTags(cm); styleBulletLines(cm); styleHeadings(cm); updateEditorWidgets(cm); });
     
     // === Notes ===
     const SCENARIOS = {
@@ -123,7 +123,7 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
     let currentNote = 'Daily Note';
     const noteTabs = document.querySelectorAll('.note-tab');
     const SCENARIO_DESCS = {
-      dashboard: 'Jordan manages several rentals. He captures notes on the left and watches organized dashboards update on the right.',
+      dashboard: "Jordan manages several rentals. He spends a lot of time on the go, with his phone. He's a big proponent of GTD, but struggled to implement it in an electronic form. No tool was flexible enough, and most fell apart if system wasn't followed religiously. With Obsidian+, the data organizes itself. Now his daily notes are his inbox basket. His properties are his projects, marking something with a tag flags it important, everything else becomes reference. Jordan can quickly see who paid the rent and if there is a water leak. Problems surface to the top before they become emergencies.",
       handoff: 'Alice and Bob are coworkers handing off tasks. Send items from Alice\'s note to Bob and see updates flow back.'
     };
     scenarioDescEl.textContent = SCENARIO_DESCS.dashboard;
@@ -313,35 +313,14 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
       const editorWrap = document.getElementById(wrapId);
       if(editorWrap) inst.setSize(null, editorWrap.clientHeight);
     }
-    function renderNotePreview(inst, previewId){
-      const preview = document.getElementById(previewId);
-      if(!preview) return;
-      const text = inst.getValue();
-      const html = text.split(/\r?\n/).map(line=>{
-        const trimmed = line.trim();
-        if(/^!\[\[(.+?)\]\]/.test(trimmed)){
-          const img = RegExp.$1;
-          return `<img src="${img}" alt="${img}" style="max-width:100%;">`;
-        }else if(/^(#{1,6})\s+(.*)/.test(trimmed)){
-          const lvl = RegExp.$1.length;
-          const content = RegExp.$2;
-          return `<h${lvl}>${content}</h${lvl}>`;
-        }else if(trimmed){
-          return `<p>${trimmed}</p>`;
-        }
-        return '';
-      }).join('');
-      preview.innerHTML = html;
-    }
-
-    function initEditor(textareaId, previewId, wrapId){
+    function initEditor(textareaId, wrapId){
       const inst = CodeMirror.fromTextArea(document.getElementById(textareaId), {
         lineNumbers:false,
         lineWrapping:true,
         mode:null
       });
       inst.addOverlay(overlay);
-      const refresh = ()=>{ styleEditorTags(inst); styleBulletLines(inst); styleHeadings(inst); updateEditorWidgets(inst); renderNotePreview(inst, previewId); matchHeights(inst, wrapId); };
+      const refresh = ()=>{ styleEditorTags(inst); styleBulletLines(inst); styleHeadings(inst); updateEditorWidgets(inst); matchHeights(inst, wrapId); };
       inst.on('change', refresh);
       inst.on('viewportChange', refresh);
       refresh();
@@ -350,7 +329,6 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
 
     function render(){
       if(!containerEl) return;
-      renderNotePreview(cm, 'notePreview');
       const items = currentItems();
       const todos = items.filter(i=>i.view === 'task' && i.tags.some(t=>t==='todo' || t==='urgent'));
       const payments = items.filter(i=>i.view === 'payment');
@@ -466,9 +444,9 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
     function initHandoff(){
       if(initHandoff.ready) return;
       initHandoff.ready = true;
-      const cmAlice = initEditor('aliceInput','', 'aliceEditorWrap');
-      const cmBob = initEditor('bobInput','', 'bobEditorWrap');
-      cmAlice.setValue(`# Alice Daily Note\n- [ ] #todo Bob: prepare Q3 report\n        - gather metrics from CRM`);
+      const cmAlice = initEditor('aliceInput', 'aliceEditorWrap');
+      const cmBob = initEditor('bobInput', 'bobEditorWrap');
+      cmAlice.setValue(`# Alice Daily Note\n- [ ] #todo Bob: prepare Q3 report\n  - gather metrics from CRM`);
       cmBob.setValue(`# Bob Daily Log`);
       const transfers = [];
 
@@ -483,7 +461,8 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
             const l = aliceLines[i];
             const ind = l.match(/^(\s*)/)[1];
             if(ind.length <= indent.length) break;
-            context.push('  '+l.trim());
+            const ctext = l.trim().replace(/^[-+*]/,'+');
+            context.push('  '+ctext);
           }
           let replaced = lineText.replace('#todo','#waiting');
           replaced = setLineState(replaced,'open');
