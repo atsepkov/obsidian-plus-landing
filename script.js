@@ -555,8 +555,9 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
                 let insertAt = j + 1;
                 const childIndent = parentIndent + '  ';
                 while(insertAt < targetLines.length && targetLines[insertAt].startsWith(childIndent)){
-                  const ch = targetLines[insertAt].charAt(childIndent.length);
-                  if(ch === '+' || ch === '*') targetLines.splice(insertAt,1);
+                  const rel = targetLines[insertAt].slice(childIndent.length);
+                  const m = rel.match(/^\s*([+*])/);
+                  if(m) targetLines.splice(insertAt,1);
                   else insertAt++;
                 }
                 const prefixed = context.map(l=>parentIndent + l);
