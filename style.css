@@ -118,16 +118,25 @@
 
     .dash-header {
       display:flex;
-      justify-content:space-between;
       align-items:center;
       cursor:pointer;
       font-weight:700;
       margin:3px 8px;
+      gap:6px;
     }
     .dash-header .arrow {
       transition:transform .2s;
       display:inline-block;
       transform:rotate(90deg);
+      margin-left:auto;
+    }
+    .dash-header .count-badge {
+      background:var(--danger);
+      color:#fff;
+      padding:0 6px;
+      border-radius:10px;
+      font-size:12px;
+      display:none;
     }
     .table-wrap.collapsed .dash-body { display:none; }
     .table-wrap.collapsed .dash-header .arrow { transform:rotate(0); }
@@ -210,5 +219,5 @@
     /* Responsive */
     @media (max-width: 960px) { .demo-wrap { grid-template-columns: 1fr; } }
 
-.cm-h1 { font-size:18px; font-weight:700; color:var(--accent-strong); }
+.cm-h1 { font-size:24px; font-weight:700; color:var(--accent); }
 .cm-h2 { font-size:16px; font-weight:700; color:var(--accent-strong); }

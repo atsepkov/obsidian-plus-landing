@@ -12,6 +12,7 @@
     
     // === Elements ===
     const includePadEl = document.getElementById('includePad');
+    const scenarioSelect = document.getElementById('scenarioSelect');
     const containerEl = document.getElementById('viewContainer');
     const cm = CodeMirror.fromTextArea(document.getElementById('noteInput'), {
       lineNumbers: false,
@@ -39,7 +40,8 @@
     cm.on('viewportChange', ()=>{ styleEditorTags(); styleBulletLines(); styleHeadings(); updateEditorWidgets(); });
     
     // === Notes ===
-    const NOTES = {
+    const SCENARIOS = {
+      default: {
       'Daily Note':
 `Dump anything that comes to mind into your daily notes, all information will self-organize into a database:
 - 15 Boardwalk: guest-reported issues
@@ -118,7 +120,10 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
         - https://www.youtube.com/watch?v=lwXCyKI845E
         - relaxing, focus, ambient
         - ![[music_screenshot4.png]]`
+      }
     };
+    let currentScenario = 'default';
+    let NOTES = JSON.parse(JSON.stringify(SCENARIOS[currentScenario]));
     let currentNote = 'Daily Note';
     const noteTabs = document.querySelectorAll('.note-tab');
 
@@ -212,9 +217,24 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
       return `<span class="badge" style="background:${bg};color:${fg};">${tag}</span>`;
     }
 
+    function setBadge(wrap, count){
+      const el = wrap.querySelector('.count-badge');
+      if(!el) return;
+      el.textContent = count;
+      el.dataset.count = count;
+    }
+
+    function updateBadgeVisibility(wrap){
+      const el = wrap.querySelector('.count-badge');
+      if(!el) return;
+      const count = Number(el.dataset.count || 0);
+      if(count > 0 && wrap.classList.contains('collapsed')) el.style.display = 'inline-block';
+      else el.style.display = 'none';
+    }
+
     function tableHTML(title, items){
       if(!items.length) return '';
-      return `<div class="card table-wrap"><div class="dash-header">${title}<span class="arrow">›</span></div><div class="dash-body"><table><tbody>${
+      return `<div class="card table-wrap"><div class="dash-header"><span class="dash-title">${title}</span><span class="count-badge"></span><span class="arrow">›</span></div><div class="dash-body"><table><tbody>${
         items.map(i=>`<tr class="item ${bulletClass(i.bullet)}${i.status==='done'?' done':''}${i.status==='cancelled'?' cancelled':''}" data-note="${i.source}"><td>${renderMainLine(i)}</td></tr>${i.children.length?`<tr class="details"><td><ul>${i.children.map(renderChildLine).join('')}</ul></td></tr>`:''}`).join('')
       }</tbody></table></div></div>`;
     }
@@ -310,12 +330,17 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
       const music = items.filter(i=>i.view === 'music');
       const monitoring = items.filter(i=>i.view === 'monitoring');
       containerEl.innerHTML = tableHTML('Todos', todos) + tableHTML('Payments', payments) + tableHTML('Music', music) + tableHTML('Monitoring', monitoring);
+      const todoAlerts = todos.filter(i=>i.tags.includes('urgent')).length;
+      const monitoringErrors = monitoring.filter(i=>i.bullet==='*').length;
       const wraps = containerEl.querySelectorAll('.table-wrap');
       wraps.forEach(wrap=>{
         const header = wrap.querySelector('.dash-header');
-        header.addEventListener('click',()=>wrap.classList.toggle('collapsed'));
-        const title = header.firstChild.textContent.trim();
+        header.addEventListener('click',()=>{wrap.classList.toggle('collapsed'); updateBadgeVisibility(wrap);});
+        const title = header.querySelector('.dash-title').textContent.trim();
         if(title==='Todos' || title==='Music') wrap.classList.add('collapsed');
+        if(title==='Todos') setBadge(wrap, todoAlerts);
+        if(title==='Monitoring') setBadge(wrap, monitoringErrors);
+        updateBadgeVisibility(wrap);
       });
       containerEl.querySelectorAll('tr.item').forEach(row=>{
         row.addEventListener('click',()=>{
@@ -354,6 +379,14 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
     }
 
     noteTabs.forEach(btn=>btn.addEventListener('click',()=>loadNote(btn.dataset.note)));
+
+    if(scenarioSelect){
+      scenarioSelect.addEventListener('change', ()=>{
+        currentScenario = scenarioSelect.value;
+        NOTES = JSON.parse(JSON.stringify(SCENARIOS[currentScenario]));
+        loadNote('Daily Note');
+      });
+    }
 
     function updateLineState(note, line, state){
       const apply = (lines)=>{
