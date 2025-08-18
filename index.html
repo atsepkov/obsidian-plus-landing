@@ -124,6 +124,30 @@
     tr.details.show { display:table-row; }
     tr.details ul { margin: 0; }
     .table-wrap + .table-wrap { margin-top:20px; }
+    .table-wrap ul { list-style:none; padding-left:16px; }
+
+    .dash-header {
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      cursor:pointer;
+      font-weight:700;
+      margin:3px 8px;
+    }
+    .dash-header .arrow { transition:transform .2s; }
+    .table-wrap.collapsed .dash-body { display:none; }
+    .table-wrap.collapsed .dash-header .arrow { transform:rotate(-90deg); }
+
+    .dash-bullet {
+      display:inline-block;
+      width:6px; height:6px;
+      border-radius:50%;
+      margin-right:6px;
+      background:var(--text-normal);
+    }
+    .dash-bullet.plus { background:#3b82f6; }
+    .dash-bullet.star { background:#ef4444; }
+    .dash-bullet.dash { background:var(--text-normal); }
 
     .badge {
       display:inline-block; color:#fff; padding:0px 5px; border-radius:10px; font-size:12px;
@@ -149,6 +173,19 @@
     #notePanel { display:flex; flex-direction:column; height:520px; }
     #previewPanel { height:540px; overflow:auto; }
     #editorWrap { flex:1; min-height:400px; }
+
+    #notePreview {
+      margin-top:8px;
+      padding:10px;
+      border:1px solid var(--border);
+      border-radius:var(--radius-md);
+      background:var(--bg-secondary);
+      max-height:200px;
+      overflow:auto;
+    }
+    #notePreview h1 { font-size:18px; margin:6px 0; }
+    #notePreview h2 { font-size:16px; margin:6px 0; }
+    #notePreview img { max-width:100%; border-radius:var(--radius-md); }
 
     /* .rendered-note {  } */
     .card table { margin-bottom: 5px; }
@@ -268,6 +305,7 @@
             <div id="editorWrap">
               <textarea id="noteInput" spellcheck="false"></textarea>
             </div>
+            <div id="notePreview" class="rendered-note"></div>
             <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text-muted);margin-top:8px;">
               <input id="includePad" type="checkbox" checked style="accent-color:var(--accent);"> Add a few sample items from other notes (to simulate vault-wide rollups)
             </label>
@@ -420,19 +458,19 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
   - [ ] #urgent extend building permit`,
 
       'Music Library':
-`- #music Hypermind Music — Limitless Productivity Playlist
-	- https://www.youtube.com/watch?v=4MFOBeUCPkw
-	- coding, focus, chill
-  - ![[music_screenshot2.png]]
-- #music Night at Work | Instrumental Chill Music Mix
-	- https://www.youtube.com/watch?v=n9Y2Eb4BaSg
-	- optimistic, calm, focus
-	- ~8min: Audial - Silhouette
-  ![[music_screenshot3.png]]
-- #music Deadline Mode • Focus Beats to Crush Your To-Do List | Chillstep Mix
-	- https://www.youtube.com/watch?v=lwXCyKI845E
-	- relaxing, focus, ambient
-  - ![[music_screenshot4.png]]`
+  `- #music Hypermind Music — Limitless Productivity Playlist
+        - https://www.youtube.com/watch?v=4MFOBeUCPkw
+        - coding, focus, chill
+        - ![[music_screenshot2.png]]
+  - #music Night at Work | Instrumental Chill Music Mix
+        - https://www.youtube.com/watch?v=n9Y2Eb4BaSg
+        - optimistic, calm, focus
+        - ~8min: Audial - Silhouette
+        - ![[music_screenshot3.png]]
+  - #music Deadline Mode • Focus Beats to Crush Your To-Do List | Chillstep Mix
+        - https://www.youtube.com/watch?v=lwXCyKI845E
+        - relaxing, focus, ambient
+        - ![[music_screenshot4.png]]`
     };
     let currentNote = 'Daily Note';
     const noteTabs = document.querySelectorAll('.note-tab');
@@ -445,6 +483,7 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
         if(!line.trim()) return;
         const indent = line.match(/^\s*/)[0].length;
         const clean = line.trim();
+        const bulletChar = /^[-+*]/.test(clean) ? clean.charAt(0) : '';
         const statusChar = (clean.match(/^[-+*]\s*\[( |x|-)\]/i)||[])[1] || ' ';
         const status = statusChar === 'x' ? 'done' : statusChar === '-' ? 'cancelled' : 'open';
         const tags = Array.from(clean.matchAll(/#([A-Za-z0-9_-]+)/g)).map(m=>m[1].toLowerCase());
@@ -461,7 +500,7 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
           .replace(/\[\[202[4-9]-[01]\d-[0-3]\d\]\]/g,'')
           .replace(url,'')
           .replace(/\s{2,}/g,' ').trim();
-        const node = { text:textContent, tags, due, url, status, line:idx, children:[] };
+        const node = { bullet:bulletChar, text:textContent, tags, due, url, status, line:idx, children:[] };
         while(stack.length && indent <= stack[stack.length-1].indent) stack.pop();
         stack[stack.length-1].children.push(node);
         stack.push({ indent, children: node.children });
@@ -487,6 +526,7 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
               url:n.url,
               status:n.status,
               line:n.line,
+              bullet:n.bullet,
               view:n.tags.includes('music') ? 'music' : (n.tags.includes('iot') ? 'monitoring' : (n.tags.some(t=>t==='payment' || t==='pay') ? 'payment' : 'task')),
               source:name,
               children
@@ -527,9 +567,9 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
 
     function tableHTML(title, items){
       if(!items.length) return '';
-      return `<div class="card table-wrap"><div style="font-weight:700;margin:3px 8px;">${title}</div><table><tbody>${
+      return `<div class="card table-wrap"><div class="dash-header">${title}<span class="arrow">▾</span></div><div class="dash-body"><table><tbody>${
         items.map(i=>`<tr class="item" data-note="${i.source}"><td>${renderMainLine(i)}</td></tr>${i.children.length?`<tr class="details"><td><ul>${i.children.map(renderChildLine).join('')}</ul></td></tr>`:''}`).join('')
-      }</tbody></table></div>`;
+      }</tbody></table></div></div>`;
     }
 
     function styleEditorTags(){
@@ -568,15 +608,42 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
       const editorWrap = document.getElementById('editorWrap');
       if(editorWrap) cm.setSize(null, editorWrap.clientHeight);
     }
+    function renderNotePreview(){
+      const preview = document.getElementById('notePreview');
+      if(!preview) return;
+      const text = cm.getValue();
+      const html = text.split(/\r?\n/).map(line=>{
+        const trimmed = line.trim();
+        if(/^!\[\[(.+?)\]\]/.test(trimmed)){
+          const img = RegExp.$1;
+          return `<img src="${img}" alt="${img}" style="max-width:100%;">`;
+        }else if(/^(#{1,6})\s+(.*)/.test(trimmed)){
+          const lvl = RegExp.$1.length;
+          const content = RegExp.$2;
+          return `<h${lvl}>${content}</h${lvl}>`;
+        }else if(trimmed){
+          return `<p>${trimmed}</p>`;
+        }
+        return '';
+      }).join('');
+      preview.innerHTML = html;
+    }
 
     function render(){
       if(!containerEl) return;
+      renderNotePreview();
       const items = currentItems();
       const todos = items.filter(i=>i.view === 'task' && i.tags.some(t=>t==='todo' || t==='urgent'));
       const payments = items.filter(i=>i.view === 'payment');
       const music = items.filter(i=>i.view === 'music');
       const monitoring = items.filter(i=>i.view === 'monitoring');
       containerEl.innerHTML = tableHTML('Todos', todos) + tableHTML('Payments', payments) + tableHTML('Music', music) + tableHTML('Monitoring', monitoring);
+      const wraps = containerEl.querySelectorAll('.table-wrap');
+      wraps.forEach((wrap,i)=>{
+        const header = wrap.querySelector('.dash-header');
+        header.addEventListener('click',()=>wrap.classList.toggle('collapsed'));
+        if(i>0) wrap.classList.add('collapsed');
+      });
       containerEl.querySelectorAll('tr.item').forEach(row=>{
         row.addEventListener('click',()=>{
           const next = row.nextElementSibling;
@@ -639,14 +706,19 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
       return newText;
     }
 
+    function bulletClass(ch){
+      return ch === '+' ? 'plus' : (ch === '*' ? 'star' : 'dash');
+    }
+
     function renderMainLine(i){
+      const bullet = `<span class="dash-bullet ${bulletClass(i.bullet)}"></span>`;
       const checkbox = i.view === 'task' ? `<span class="chk" data-note="${i.source}" data-line="${i.line}" data-state="${i.status}"></span> ` : '';
       const tags = i.tags.map(t=>badge('#'+t)).join(' ');
       const statusIcon = i.status==='done' ? '✅' : (i.status==='cancelled' ? '❌' : '');
       const due = i.due?` <span class="due">${statusIcon} ${i.due}</span>`:'';
       const link = `<a href="#" class="note-link" data-note="${i.source}">${i.source}</a>`;
       const url = i.url?` <a href="${i.url}" target="_blank">${i.url}</a>`:'';
-      return `${checkbox}${tags} ${i.title}${due} ${link}${url}`;
+      return `${bullet}${checkbox}${tags} ${i.title}${due} ${link}${url}`;
     }
 
     function renderChildLine(c){
@@ -654,10 +726,11 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
         const img = RegExp.$1;
         return `<li><img src="${img}" alt="${img}" style="max-width:100%;"></li>`;
       }
+      const bullet = `<span class="dash-bullet ${bulletClass(c.bullet)}"></span>`;
       const tags = c.tags.map(t=>badge('#'+t)).join(' ');
       const due = c.due?` <span class="due">${c.due}</span>`:'';
       const url = c.url?` <a href="${c.url}" target="_blank">${c.url}</a>`:'';
-      return `<li>${tags} ${c.text}${due}${url}</li>`;
+      return `<li>${bullet}${tags} ${c.text}${due}${url}</li>`;
     }
 
     // Footer year + theme how-to
