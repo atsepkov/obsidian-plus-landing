@@ -134,6 +134,11 @@
     .CodeMirror-lines { padding:10px; }
     .cm-tag { color:#fff; border-radius:10px; padding:1px 5px; line-height: normal; display:inline-block; }
 
+    .CodeMirror span { color:var(--text-normal); }
+    .cm-bullet-plus { color:#3b82f6; }
+    .cm-bullet-star { color:#ef4444; }
+    .cm-bullet-dash { color:var(--text-normal); }
+
     #notePanel { display:flex; flex-direction:column; height:420px; }
     #previewPanel { height:420px; overflow:auto; }
     #editorWrap { flex:1; min-height:360px; }
@@ -301,7 +306,7 @@
   </footer>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/codemirror.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/mode/markdown/markdown.min.js"></script>
+  <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/mode/markdown/markdown.min.js"></script> -->
   <script>
     // === Dark mode: auto + toggle + persisted ===
     (function() {
@@ -320,13 +325,22 @@
     const containerEl = document.getElementById('viewContainer');
     const cm = CodeMirror.fromTextArea(document.getElementById('noteInput'), {
       lineNumbers: false,
-      lineWrapping: true,
-      mode: 'markdown'
+      lineWrapping: true, 
+      mode: null
     });
     cm.addOverlay({
       token: function(stream) {
+        if (stream.sol()) {
+          stream.eatSpace();
+          const ch = stream.peek();
+          if (ch === '+' || ch === '-' || ch === '*') {
+            stream.next();
+            return ch === '+' ? 'bullet-plus' : (ch === '*' ? 'bullet-star' : 'bullet-dash');
+          }
+        }
         if (stream.match(/#[A-Za-z0-9_-]+/)) return 'tag';
         while (stream.next() != null && !stream.match(/#[A-Za-z0-9_-]+/, false)) {}
+        stream.next();
         return null;
       }
     });
