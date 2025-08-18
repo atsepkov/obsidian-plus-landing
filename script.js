@@ -225,7 +225,9 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
     };
 
     const TAG_STYLE_EL = document.createElement('style');
-    TAG_STYLE_EL.textContent = Object.entries(TAG_COLORS).map(([k,{bg,fg}])=>`.cm-tag-${k}{background:${bg};color:${fg};}`).join('');
+    TAG_STYLE_EL.textContent = Object.entries(TAG_COLORS)
+      .map(([k,{bg,fg}])=>`.cm-s-default .cm-tag-${k}, .cm-tag-${k}{background:${bg};color:${fg} !important;}`)
+      .join('');
     document.head.appendChild(TAG_STYLE_EL);
 
     function tagStyles(str){
@@ -591,8 +593,8 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
                 const next = curState===' ' ? 'x' : (curState==='x' ? '-' : ' ');
                 const newLine = lineText.slice(0,curIdx+1)+next+lineText.slice(curIdx+2);
                 inst.replaceRange(newLine, {line:lineNo, ch:0}, {line:lineNo, ch:lineText.length});
-                refresh();
                 if(cb) cb(newLine, lineNo);
+                requestAnimationFrame(refresh);
               });
                 inst.addWidget({line:inst.getLineNumber(line), ch:idx}, box);
                 inst._chkWidgets.push(box);
@@ -604,7 +606,7 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
             const line = cm.getLine(change.from.line);
             cb(line, change.from.line);
           }
-          refresh();
+          requestAnimationFrame(refresh);
         });
         inst.on('viewportChange', refresh);
         refresh();
