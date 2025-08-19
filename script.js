@@ -101,7 +101,7 @@ The data coming from the outside world is color-coded to avoid confusion with yo
 + #iot 22 Oak Ridge: basement humidity 80%
         - [ ] #todo inspect dehumidifier
 + #iot 10 Market St: front door left ajar
-        - [ ] #todo contact security`,
+        - [ ] #todo call tenant`,
 
       'Project Note':
 
@@ -135,10 +135,10 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
     let currentNote = 'Daily Note';
     const noteTabs = document.querySelectorAll('.note-tab[data-note]');
     const SCENARIO_DESCS = {
-      dashboard: "Jordan manages several rentals. He spends a lot of time on the go, with his phone. He's a big proponent of GTD, but struggled to implement it in an electronic form. No tool was flexible enough, and most fell apart if the system wasn't followed religiously. With Obsidian+, the effort of organizing data is offloaded from the user to the system. Now Jordan uses his daily note as his inbox basket. His properties are his projects, marking something with a tag flags it important, everything else becomes reference. Jordan can quickly see who paid the rent and if there is a water leak. Problems surface to the top before they become emergencies.",
-      handoff: 'Alice and Bob are coworkers sharing linked notebooks. They routinely coordinate on tasks by sending them to each other. Try playing around with the notebooks below. You can add a message before sending a response, or cancel a task to see how the other notebook responds (to cancel a task, click it twice).'
+      dashboard: `Jordan manages several rentals. He spends a lot of time on the go, with his phone. He's a big proponent of GTD, but struggled to implement it in an electronic form. No tool was flexible enough, and most fell apart if the system wasn't followed religiously. With Obsidian+, the effort of organizing data is offloaded from the user to the system. Now Jordan uses his daily note as his <strong style="color:var(--accent);">inbox</strong> basket. His properties are his <strong style="color:var(--accent);">projects</strong>, marking something with a tag flags it important, everything else becomes <strong style="color:var(--accent);">reference</strong>. Jordan can quickly see who paid the rent and if there is a water leak. Problems surface to the top before they become emergencies.`,
+      handoff: `Alice and Bob are coworkers sharing linked notebooks. They routinely coordinate on tasks by sending them to each other. Try playing around with the notebooks below. You can add a message before sending a response, or cancel a task to see how the other notebook responds (to cancel a task, click it twice).`
     };
-    scenarioDescEl.textContent = SCENARIO_DESCS.dashboard;
+    scenarioDescEl.innerHTML = SCENARIO_DESCS.dashboard;
     scenarioTabs.forEach(tab=>{
       tab.addEventListener('click', ()=>{
         const name = tab.dataset.scenario;
@@ -146,7 +146,7 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
           s.style.display = s.classList.contains('scenario-'+name) ? 'grid' : 'none';
         });
         scenarioTabs.forEach(t=>t.classList.toggle('active', t===tab));
-        scenarioDescEl.textContent = SCENARIO_DESCS[name];
+        scenarioDescEl.innerHTML = SCENARIO_DESCS[name];
         if(name==='handoff' && typeof initHandoff === 'function') initHandoff();
       });
     });
@@ -189,7 +189,7 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
       function walk(nodes, ctx){
         nodes.forEach(n=>{
           const nextCtx = n.text.includes(':') ? n.text.split(':')[0].trim() : ctx;
-          const children = n.children.filter(c=>!c.tags.length);
+          const children = n.children;
           let title = n.text;
           if(ctx && n.tags.some(t=>t==='todo' || t==='urgent')){
             title = `${ctx}: ${title}`;
@@ -478,10 +478,10 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
       const cmAliceLog = initEditor('aliceLog', 'aliceLogWrap');
       const cmBobDaily = initEditor('bobDaily', 'bobDailyWrap');
       const cmBobLog = initEditor('bobLog', 'bobLogWrap');
-      cmAliceDaily.setValue(`# Alice Daily Note\n- [ ] #Bob prepare Q3 report\n  - gather metrics from CRM`);
+      cmAliceDaily.setValue(`# Alice Daily Note\nFire the trigger below and watch Bob's transaction log.\n- [ ] #Bob prepare Q3 report\n  - gather metrics from CRM`);
       cmAliceLog.setValue(`# Alice Transaction Log`);
       cmBobDaily.setValue(`# Bob Daily Note\n- [ ] #Alice verify vendor invoices`);
-      cmBobLog.setValue(`# Bob Transaction Log`);
+      cmBobLog.setValue(`# Bob Transaction Log\nAppend your response under the task to send it back.`);
       requestAnimationFrame(()=>{
         [cmAliceDaily, cmAliceLog, cmBobDaily, cmBobLog].forEach(cm=>{
           styleEditorTags(cm); styleBulletLines(cm); styleHeadings(cm); updateEditorWidgets(cm);
@@ -592,11 +592,14 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
       function setupCheckbox(inst, cb){
         function refresh(){
           if(inst._chkWidgets){ inst._chkWidgets.forEach(w=>w.remove()); }
+          if(inst._chkMarks){ inst._chkMarks.forEach(m=>m.clear()); }
           inst._chkWidgets = [];
+          inst._chkMarks = [];
           inst.eachLine(line=>{
             const text = line.text;
             const idx = text.indexOf('[');
             if(idx>=0 && /\[( |x|-)\]/.test(text.slice(idx,idx+3))){
+              const lineNo = inst.getLineNumber(line);
               const box = document.createElement('input');
               box.type = 'checkbox';
               box.className = 'cm-hover-checkbox';
@@ -605,7 +608,6 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
               box.indeterminate = state==='-';
               box.addEventListener('mousedown', e=>{
                 e.preventDefault();
-                const lineNo = inst.getLineNumber(line);
                 const lineText = inst.getLine(lineNo);
                 const curIdx = lineText.indexOf('[');
                 const curState = lineText[curIdx+1];
@@ -615,10 +617,12 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
                 if(cb) cb(newLine, lineNo);
                 requestAnimationFrame(refresh);
               });
-                inst.addWidget({line:inst.getLineNumber(line), ch:idx}, box);
-                inst._chkWidgets.push(box);
-              }
-            });
+              inst.addWidget({line:lineNo, ch:idx}, box);
+              inst._chkWidgets.push(box);
+              const mark = inst.markText({line:lineNo, ch:0}, {line:lineNo, ch:idx}, {className:'cm-chk-prefix'});
+              inst._chkMarks.push(mark);
+            }
+          });
         }
         inst.on('change',(cm,change)=>{
           if(change.origin==='+input' && cb){
