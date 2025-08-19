@@ -35,7 +35,7 @@
 const cm = initEditor('noteInput', 'editorWrap');
 cm.on('change', ()=>requestAnimationFrame(render));
 
-let dashState = { Todos:true, Payments:false, Music:true, Monitoring:false, Lockbox:true };
+let dashState = { Todos:true, 'Someday, Maybe':true, Payments:false, Music:true, Monitoring:false, Lockbox:true };
 
     // === Notes ===
     const SCENARIOS = {
@@ -291,7 +291,8 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
       alice:  { bg:'#ec4899', fg:'#ffffff' },
       bob:    { bg:'#f59e0b', fg:'#ffffff' },
       application:{ bg:'green', fg:'#ffffff' },
-      lockbox:{ bg:'#be185d', fg:'#ffffff' }
+      lockbox:{ bg:'#be185d', fg:'#ffffff' },
+      backlog:{ bg:'#0d9488', fg:'#ffffff' }
     };
 
     const TAG_STYLE_EL = document.createElement('style');
@@ -427,7 +428,8 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
     function render(){
       if(!containerEl) return;
       const items = currentItems();
-      const todos = items.filter(i=>i.view === 'task' && i.tags.some(t=>t==='todo' || t==='urgent'));
+      const todos = items.filter(i=>i.view === 'task' && i.tags.some(t=>t==='todo' || t==='urgent') && !i.tags.includes('backlog'));
+      const backlog = items.filter(i=>i.view === 'task' && i.tags.includes('backlog'));
       const payments = items.filter(i=>i.view === 'payment');
       const music = items.filter(i=>i.view === 'music');
       const lockboxes = items.filter(i=>i.view === 'lockbox');
@@ -443,10 +445,10 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
           seenMon.add(prop);
         }
       });
-      containerEl.innerHTML = tableHTML('Todos', todos) + tableHTML('Payments', payments) + tableHTML('Music', music) + tableHTML('Monitoring', monitoring) + tableHTML('Lockbox', lockboxes);
+      containerEl.innerHTML = tableHTML('Todos', todos) + tableHTML('Someday, Maybe', backlog) + tableHTML('Payments', payments) + tableHTML('Music', music) + tableHTML('Monitoring', monitoring) + tableHTML('Lockbox', lockboxes);
       const todoAlerts = todos.filter(i=>i.tags.includes('urgent')).length;
       const monitoringErrors = monitoring.filter(i=>i.bullet==='*').length;
-      const totals = {Todos:todos.length, Payments:payments.length, Music:music.length, Monitoring:monitoring.length, Lockbox:lockboxes.length};
+      const totals = {Todos:todos.length, 'Someday, Maybe':backlog.length, Payments:payments.length, Music:music.length, Monitoring:monitoring.length, Lockbox:lockboxes.length};
       const wraps = containerEl.querySelectorAll('.table-wrap');
       wraps.forEach(wrap=>{
         const header = wrap.querySelector('.dash-header');
