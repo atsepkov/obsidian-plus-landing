@@ -33,37 +33,37 @@
     };
 const cm = initEditor('noteInput', 'editorWrap');
 cm.on('change', ()=>requestAnimationFrame(render));
-cm.on('viewportChange', ()=>{ styleEditorTags(cm); styleBulletLines(cm); styleHeadings(cm); updateEditorWidgets(cm); });
+cm.on('viewportChange', ()=>{ styleEditorTags(cm); styleBulletLines(cm); styleHeadings(cm); stylePageBreaks(cm); updateEditorWidgets(cm); });
 
-let dashState = { Todos:true, Payments:false, Music:true, Monitoring:false };
+let dashState = { Todos:true, Payments:false, Music:true, Monitoring:false, Lockbox:true };
 
     // === Notes ===
     const SCENARIOS = {
       dashboard: {
-      'Daily Note':
+      'Daily Notes':
 `# 2015-08-17
 Dump anything that comes to mind into your daily notes, all information will self-organize into a database:
 - 15 Boardwalk: guest-reported issues
-	- [ ] #todo check leak under fridge
-		- guest says they saw a small puddle
-	- [ ] #todo restock coffee and paper towels
+        - [ ] #todo check leak under fridge
+                - guest says they saw a small puddle
+        - [ ] #todo restock coffee and paper towels
 
 - [ ] #todo 5 Bow St: replace smoke detectors
-	- had false alarm recently
-	- they're ~8 years old now, time to update
+        - had false alarm recently
+        - they're ~8 years old now, time to update
 
 Personal assistant directly in your notebook that pulls the context from your notes:
 - I need to estimate construction costs for a 2000 sqft house in 02465 zip
-	- [x] #chatgpt can you ballpark this? ✅ 2025-08-17✓✓
-	    + Construction costs for a 2000 sqft house in zip code 02465 (Newton, MA) can range **$400,000–$800,000+** depending on finishes and labor.
-	        + Low-end: Basic finishes, modular/prefab (~$200/sqft)
-	        + Mid-range: Custom build with standard materials (~$300–$400/sqft)
-	        + High-end: Luxury finishes, complex design (~$400+/sqft)
-	    + Factors impacting cost:
-	        + Land/prep (steep lots or rocky soil increase expenses)
-	        + Local permitting fees and labor rates (Boston area is ~20% above national avg)
-	        + Material choices (e.g., hardwood vs. laminate)
-	    + Verify with local contractors for precise bids.
+        - [x] #chatgpt can you ballpark this? ✅ 2025-08-17✓✓
+            + Construction costs for a 2000 sqft house in zip code 02465 (Newton, MA) can range **$400,000–$800,000+** depending on finishes and labor.
+                + Low-end: Basic finishes, modular/prefab (~$200/sqft)
+                + Mid-range: Custom build with standard materials (~$300–$400/sqft)
+                + High-end: Luxury finishes, complex design (~$400+/sqft)
+            + Factors impacting cost:
+                + Land/prep (steep lots or rocky soil increase expenses)
+                + Local permitting fees and labor rates (Boston area is ~20% above national avg)
+                + Material choices (e.g., hardwood vs. laminate)
+            + Verify with local contractors for precise bids.
 
 Send out rental applications directly from your notebook:
 - [x] #application bcollins@gmail.com ✅ 2025-08-17
@@ -73,37 +73,56 @@ Send out rental applications directly from your notebook:
 
 Document music that helps you focus:
 - #music Midnight Flow Music — Night Bass
-	- https://www.youtube.com/watch?v=AVmyklX6LEA
-	- calm, focus
-	- ![[music_screenshot1.png]]`,
+        - https://www.youtube.com/watch?v=AVmyklX6LEA
+        - calm, focus
+        - ![[music_screenshot1.png]]
+---
+# 2015-08-16
+- [x] #todo call electrician ✅ 2025-08-16
+- #music Hypermind Music — Limitless Productivity Playlist
+        - https://www.youtube.com/watch?v=4MFOBeUCPkw
+        - coding, focus, chill
+- [x] #todo order new keys ✅ 2025-08-16
+---
+# 2015-08-15
+- [x] #todo review budget ✅ 2025-08-15
+- #music Night at Work | Instrumental Chill Music Mix
+        - https://www.youtube.com/watch?v=n9Y2Eb4BaSg
+        - optimistic, calm, focus
+        - ~8min: Audial - Silhouette
+- [x] #todo replace hallway bulbs ✅ 2025-08-15`,
 
       'Transaction Log':
 `# tx-2015-08-17
-Transaction logs are auto-populated from external APIs + IoT devices. They're like a "Daily Note" but for your systems. This is how you keep track of payments, check-ins, and other transactions.
+Transaction logs are auto-populated from external APIs + IoT devices. They're like a "Daily Notes" but for your systems. This is how you keep track of payments, check-ins, and other transactions.
 
 The data coming from the outside world is color-coded to avoid confusion with your personal notes:
 - your notes are white
 + responses from outside APIs (or people) are blue
 * errors are red
 
-+ #check-in 15 Boardwalk: Matt Smith ⏳ 2025-08-17 
-	+ contact info: 617-123-4567
-	+ check-out: [[2025-08-19]]
++ #check-in 15 Boardwalk: Matt Smith ⏳ 2025-08-17
+        + contact info: 617-123-4567
+        + check-out: [[2025-08-19]]
 + #payment Jordan Perkins: $2000 (Gmail sync)
-+ #payment Maryann Cooper: $1385 (Plaid sync)
-	-  said she will Zelle the rest by Monday
-		- [ ] #todo ping about remaining payment
 + #iot 5 Bow St: abnormal moisture levels under kitchen sink
         - [ ] #todo check kitchen sink for leaks
++ #iot 22 Oak Ridge: basement humidity 80%
+        - [ ] #todo inspect dehumidifier
+---
+# tx-2015-08-16
++ #payment Maryann Cooper: $1385 (Plaid sync)
+        -  said she will Zelle the rest by Monday
+                - [ ] #todo ping about remaining payment
 + #iot 16 Pearl St: abnormally high electric usage (60kWh/day)
         - probably AC
 * #iot 5 Bow St: lightbulb offline (rear hallway)
-+ #iot 22 Oak Ridge: basement humidity 80%
-        - [ ] #todo inspect dehumidifier
+---
+# tx-2015-08-15
 + #iot 10 Market St: front door left ajar
         - [ ] #todo call tenant`,
 
-      'Project Note':
+      'Project Notes':
 
 `# 41 Main St Rehab
 This page is dedicated to a specific project, it's not part of the daily notes. The content can be in whatever format you want, only tags you assign meaning to get interpreted.
@@ -112,19 +131,26 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
   - [x] #todo apply for sprinkler permits ✅ 2025-08-10
   - [ ] #todo run electrical
   - [x] #pay $3500 (Mario - plumbing) ✅ 2025-08-17
-  - [ ] #urgent extend building permit`,
+  - [ ] #urgent extend building permit
+  - #lockbox 3213
+---
+# 15 Boardwalk
+- #lockbox 8451
+---
+# 5 Bow St
+- #lockbox 4821
+---
+# 16 Pearl St
+- #lockbox 9374
+---
+# 22 Oak Ridge
+- #lockbox 5582
+---
+# 10 Market St
+- #lockbox 1045`,
 
       'Music Library':
-  `- #music Hypermind Music — Limitless Productivity Playlist
-        - https://www.youtube.com/watch?v=4MFOBeUCPkw
-        - coding, focus, chill
-        - ![[music_screenshot2.png]]
-  - #music Night at Work | Instrumental Chill Music Mix
-        - https://www.youtube.com/watch?v=n9Y2Eb4BaSg
-        - optimistic, calm, focus
-        - ~8min: Audial - Silhouette
-        - ![[music_screenshot3.png]]
-  - #music Deadline Mode • Focus Beats to Crush Your To-Do List | Chillstep Mix
+  `- #music Deadline Mode • Focus Beats to Crush Your To-Do List | Chillstep Mix
         - https://www.youtube.com/watch?v=lwXCyKI845E
         - relaxing, focus, ambient
         - ![[music_screenshot4.png]]`
@@ -132,10 +158,10 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
     };
     let currentScenario = 'dashboard';
     let NOTES = JSON.parse(JSON.stringify(SCENARIOS[currentScenario]));
-    let currentNote = 'Daily Note';
+    let currentNote = 'Daily Notes';
     const noteTabs = document.querySelectorAll('.note-tab[data-note]');
     const SCENARIO_DESCS = {
-      dashboard: `Jordan manages several rentals. He spends a lot of time on the go, with his phone. He's a big proponent of GTD, but struggled to implement it in an electronic form. No tool was flexible enough, and most fell apart if the system wasn't followed religiously. With Obsidian+, the effort of organizing data is offloaded from the user to the system. Now Jordan uses his daily note as his <strong style="color:var(--accent);">inbox</strong> basket. His properties are his <strong style="color:var(--accent);">projects</strong>, marking something with a tag flags it important, everything else becomes <strong style="color:var(--accent);">reference</strong>. Jordan can quickly see who paid the rent and if there is a water leak. Problems surface to the top before they become emergencies.`,
+      dashboard: `Jordan manages several rentals. He spends a lot of time on the go, with his phone. He's a big proponent of GTD, but struggled to implement it in an electronic form. No tool was flexible enough, and most fell apart if the system wasn't followed religiously. With Obsidian+, the effort of organizing data is offloaded from the user to the system. Now Jordan uses his daily notes as his <strong style="color:var(--accent);">inbox</strong> basket. His properties are his <strong style="color:var(--accent);">projects</strong>, marking something with a tag flags it important, everything else becomes <strong style="color:var(--accent);">reference</strong>. Jordan can quickly see who paid the rent and if there is a water leak. Problems surface to the top before they become emergencies.`,
       handoff: `Alice and Bob are coworkers sharing linked notebooks. They routinely coordinate on tasks by sending them to each other. Try playing around with the notebooks below. You can add a message before sending a response, or cancel a task to see how the other notebook responds (to cancel a task, click it twice).`
     };
     scenarioDescEl.innerHTML = SCENARIO_DESCS.dashboard;
@@ -159,7 +185,9 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
         if(!line.trim()) return;
         const indent = line.match(/^\s*/)[0].length;
         const clean = line.trim();
-        const bulletChar = /^[-+*]/.test(clean) ? clean.charAt(0) : '';
+        const bulletCharRaw = /^[-+*]/.test(clean) ? clean.charAt(0) : '';
+        const hasCheckbox = /^[-+*]\s*\[(?:x|\s|-)\]/i.test(clean);
+        const bulletChar = hasCheckbox ? '-' : bulletCharRaw;
         const statusChar = (clean.match(/^[-+*]\s*\[( |x|-)\]/i)||[])[1] || ' ';
         const status = statusChar === 'x' ? 'done' : statusChar === '-' ? 'cancelled' : 'open';
         const tags = Array.from(clean.matchAll(/#([A-Za-z0-9_-]+)/g)).map(m=>m[1].toLowerCase());
@@ -186,32 +214,43 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
 
     function collectFromNote(name, text){
       const out = [];
-      function walk(nodes, ctx){
+      function walk(nodes, ctx, heading){
+        let currentHeading = heading;
         nodes.forEach(n=>{
-          const nextCtx = n.text.includes(':') ? n.text.split(':')[0].trim() : ctx;
-          const children = n.children;
-          let title = n.text;
-          if(ctx && n.tags.some(t=>t==='todo' || t==='urgent')){
-            title = `${ctx}: ${title}`;
+          if(n.text.startsWith('# ')){
+            currentHeading = n.text.replace(/^#\s*/, '').trim();
+          }else{
+            const nextCtx = n.text.includes(':') ? n.text.split(':')[0].trim() : ctx;
+            const children = n.children;
+            let title = n.text;
+            if(ctx && n.tags.some(t=>t==='todo' || t==='urgent')){
+              title = `${ctx}: ${title}`;
+            }
+            if(n.tags.length){
+              out.push({
+                title,
+                tags:n.tags,
+                due:n.due,
+                url:n.url,
+                status:n.status,
+                line:n.line,
+                bullet:n.bullet,
+                view:n.tags.includes('music') ? 'music'
+                  : (n.tags.includes('iot') ? 'monitoring'
+                  : (n.tags.includes('lockbox') ? 'lockbox'
+                  : (n.tags.some(t=>t==='payment' || t==='pay') ? 'payment' : 'task'))),
+                source:name,
+                section:currentHeading,
+                children
+              });
+            }
+            if(children.length) walk(children, nextCtx, currentHeading);
+            return;
           }
-          if(n.tags.length){
-            out.push({
-              title,
-              tags:n.tags,
-              due:n.due,
-              url:n.url,
-              status:n.status,
-              line:n.line,
-              bullet:n.bullet,
-              view:n.tags.includes('music') ? 'music' : (n.tags.includes('iot') ? 'monitoring' : (n.tags.some(t=>t==='payment' || t==='pay') ? 'payment' : 'task')),
-              source:name,
-              children
-            });
-          }
-          if(n.children.length) walk(n.children, nextCtx);
+          if(n.children.length) walk(n.children, ctx, currentHeading);
         });
       }
-      walk(parseTree(text), '');
+      walk(parseTree(text), '', '');
       return out;
     }
 
@@ -287,9 +326,10 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
         inst.removeLineClass(line, 'text', 'cm-bullet-star');
         inst.removeLineClass(line, 'text', 'cm-bullet-dash');
         const text = line.text.trimStart();
-        if (text.startsWith('+')) inst.addLineClass(line, 'text', 'cm-bullet-plus');
+        const hasCheckbox = /^[-+*]\s*\[(?:x|\s|-)\]/i.test(text);
+        if (text.startsWith('+') && !hasCheckbox) inst.addLineClass(line, 'text', 'cm-bullet-plus');
         else if (text.startsWith('*')) inst.addLineClass(line, 'text', 'cm-bullet-star');
-        else if (text.startsWith('-')) inst.addLineClass(line, 'text', 'cm-bullet-dash');
+        else if (text.startsWith('-') && !hasCheckbox) inst.addLineClass(line, 'text', 'cm-bullet-dash');
       });
     }
 
@@ -310,6 +350,21 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
         const text = line.text.trimStart();
         if(text.startsWith('# ')) inst.addLineClass(line, 'text', 'cm-h1');
         else if(text.startsWith('## ')) inst.addLineClass(line, 'text', 'cm-h2');
+      });
+    }
+
+    function stylePageBreaks(inst){
+      inst._pbWidgets = inst._pbWidgets || [];
+      inst._pbWidgets.forEach(w=>w.clear());
+      inst._pbWidgets = [];
+      inst.eachLine(line=>{
+        inst.removeLineClass(line, 'text', 'cm-pagebreak');
+        if(line.text.trim()==='---'){
+          inst.addLineClass(line, 'text', 'cm-pagebreak');
+          const w = document.createElement('div');
+          w.className = 'page-break';
+          inst._pbWidgets.push(inst.addLineWidget(inst.getLineNumber(line), w, {coverGutter:true}));
+        }
       });
     }
 
@@ -343,7 +398,7 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
         mode:null
       });
       inst.addOverlay(overlay);
-      const refresh = ()=>{ styleEditorTags(inst); styleBulletLines(inst); styleHeadings(inst); updateEditorWidgets(inst); matchHeights(inst, wrapId); };
+      const refresh = ()=>{ styleEditorTags(inst); styleBulletLines(inst); styleHeadings(inst); stylePageBreaks(inst); updateEditorWidgets(inst); matchHeights(inst, wrapId); };
       inst.on('change', refresh);
       inst.on('viewportChange', refresh);
       refresh();
@@ -356,11 +411,15 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
       const todos = items.filter(i=>i.view === 'task' && i.tags.some(t=>t==='todo' || t==='urgent'));
       const payments = items.filter(i=>i.view === 'payment');
       const music = items.filter(i=>i.view === 'music');
-      const monitoring = items.filter(i=>i.view === 'monitoring');
-      containerEl.innerHTML = tableHTML('Todos', todos) + tableHTML('Payments', payments) + tableHTML('Music', music) + tableHTML('Monitoring', monitoring);
+      const lockboxes = items.filter(i=>i.view === 'lockbox');
+      const monitoringAll = items.filter(i=>i.view === 'monitoring');
+      const seenMon = new Set();
+      const monitoring = [];
+      monitoringAll.forEach(it=>{ const prop = it.title.split(':')[0].trim(); if(!seenMon.has(prop)){ monitoring.push(it); seenMon.add(prop); } });
+      containerEl.innerHTML = tableHTML('Todos', todos) + tableHTML('Payments', payments) + tableHTML('Music', music) + tableHTML('Monitoring', monitoring) + tableHTML('Lockbox', lockboxes);
       const todoAlerts = todos.filter(i=>i.tags.includes('urgent')).length;
       const monitoringErrors = monitoring.filter(i=>i.bullet==='*').length;
-      const totals = {Todos:todos.length, Payments:payments.length, Music:music.length, Monitoring:monitoring.length};
+      const totals = {Todos:todos.length, Payments:payments.length, Music:music.length, Monitoring:monitoring.length, Lockbox:lockboxes.length};
       const wraps = containerEl.querySelectorAll('.table-wrap');
       wraps.forEach(wrap=>{
         const header = wrap.querySelector('.dash-header');
@@ -384,7 +443,7 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
         });
       });
       containerEl.querySelectorAll('.note-link').forEach(a=>{
-        a.addEventListener('click',e=>{ e.preventDefault(); e.stopPropagation(); loadNote(a.dataset.note); });
+        a.addEventListener('click',e=>{ e.preventDefault(); e.stopPropagation(); loadNote(a.dataset.note, a.dataset.section); });
       });
       containerEl.querySelectorAll('.chk').forEach(cb=>{
         cb.addEventListener('click',e=>{
@@ -400,17 +459,31 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
       styleEditorTags(cm);
       styleBulletLines(cm);
       styleHeadings(cm);
+      stylePageBreaks(cm);
       updateEditorWidgets(cm);
       matchHeights(cm, 'editorWrap');
     }
 
     if(includePadEl) includePadEl.addEventListener('input', render);
 
-    function loadNote(name){
+    function loadNote(name, section){
       currentNote = name;
       noteTabs.forEach(b=>b.classList.toggle('active', b.dataset.note===name));
       cm.setValue(NOTES[name]||'');
-      requestAnimationFrame(render);
+      const decoded = section? decodeURIComponent(section) : '';
+      requestAnimationFrame(()=>{
+        render();
+        if(decoded){
+          const lines = cm.getValue().split(/\r?\n/);
+          for(let i=0;i<lines.length;i++){
+            const m = lines[i].match(/^#\s*(.+)/);
+            if(m && m[1].trim()===decoded){
+              cm.scrollIntoView({line:i, ch:0});
+              break;
+            }
+          }
+        }
+      });
     }
 
     noteTabs.forEach(btn=>btn.addEventListener('click',()=>loadNote(btn.dataset.note)));
@@ -453,7 +526,8 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
       const tags = i.tags.map(t=>badge('#'+t)).join(' ');
       const statusIcon = i.status==='done' ? '✅' : (i.status==='cancelled' ? '❌' : '');
       const due = i.due?` <span class="due">${statusIcon} ${i.due}</span>`:'';
-      const link = `<a href="#" class="note-link" data-note="${i.source}">${i.source}</a>`;
+      const linkText = i.section || i.source;
+      const link = `<a href="#" class="note-link" data-note="${i.source}" data-section="${encodeURIComponent(i.section||'')}">${linkText}</a>`;
       const url = i.url?` <a href="${i.url}" target="_blank">${i.url}</a>`:'';
       return `${bullet}${checkbox}${tags} ${i.title}${due} ${link}${url}`;
     }
@@ -484,7 +558,7 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
       cmBobLog.setValue(`# Bob Transaction Log\nAppend your response under the task to send it back.`);
       requestAnimationFrame(()=>{
         [cmAliceDaily, cmAliceLog, cmBobDaily, cmBobLog].forEach(cm=>{
-          styleEditorTags(cm); styleBulletLines(cm); styleHeadings(cm); updateEditorWidgets(cm);
+          styleEditorTags(cm); styleBulletLines(cm); styleHeadings(cm); stylePageBreaks(cm); updateEditorWidgets(cm);
           matchHeights(cm, cm.getTextArea().parentElement.id);
         });
       });
@@ -505,7 +579,7 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
         arr.push(...lines);
         cmLog.setValue(arr.join('\n'));
         requestAnimationFrame(()=>{
-          styleEditorTags(cmLog); styleBulletLines(cmLog); styleHeadings(cmLog); updateEditorWidgets(cmLog);
+          styleEditorTags(cmLog); styleBulletLines(cmLog); styleHeadings(cmLog); stylePageBreaks(cmLog); updateEditorWidgets(cmLog);
           matchHeights(cmLog, cmLog.getTextArea().parentElement.id);
           updateMiniDash(person);
         });
@@ -578,9 +652,9 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
             }
             toDailyCM.setValue(targetLines.join('\n'));
             requestAnimationFrame(()=>{
-              styleEditorTags(fromLogCM); styleBulletLines(fromLogCM); styleHeadings(fromLogCM); updateEditorWidgets(fromLogCM);
+              styleEditorTags(fromLogCM); styleBulletLines(fromLogCM); styleHeadings(fromLogCM); stylePageBreaks(fromLogCM); updateEditorWidgets(fromLogCM);
               matchHeights(fromLogCM, fromLogCM.getTextArea().parentElement.id);
-              styleEditorTags(toDailyCM); styleBulletLines(toDailyCM); styleHeadings(toDailyCM); updateEditorWidgets(toDailyCM);
+              styleEditorTags(toDailyCM); styleBulletLines(toDailyCM); styleHeadings(toDailyCM); stylePageBreaks(toDailyCM); updateEditorWidgets(toDailyCM);
               matchHeights(toDailyCM, toDailyCM.getTextArea().parentElement.id);
               updateMiniDash(originName);
               updateMiniDash(recipientName);
@@ -701,7 +775,7 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
             const newLine = setLineState(lineText, next);
             cmTarget.replaceRange(newLine,{line, ch:0},{line, ch:lineText.length});
             requestAnimationFrame(()=>{
-              styleEditorTags(cmTarget); styleBulletLines(cmTarget); styleHeadings(cmTarget); updateEditorWidgets(cmTarget);
+              styleEditorTags(cmTarget); styleBulletLines(cmTarget); styleHeadings(cmTarget); stylePageBreaks(cmTarget); updateEditorWidgets(cmTarget);
               matchHeights(cmTarget, cmTarget.getTextArea().parentElement.id);
               updateMiniDash(person);
             });

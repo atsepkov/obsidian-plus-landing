@@ -200,6 +200,9 @@
     .cm-bullet-star { color:#ef4444 !important; }
     .cm-bullet-dash { color:var(--text-normal); }
 
+    .cm-pagebreak { display:none; }
+    .page-break { border-top:1px solid var(--border); margin:12px 0; }
+
 .chk {
       display:inline-block;
       width:16px;
