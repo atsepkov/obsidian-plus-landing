@@ -92,14 +92,14 @@
     .features { grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); }
     .feature { padding: 18px; }
     .feature h3 { margin: 0 0 4px; font-size: 18px; }
-    .feature p { margin: 0; color: var(--text-muted); }
+    .feature p { margin: 10px 0; color: var(--text-muted); }
 
     .download-form input {
       flex:1;
       padding:10px 12px;
       border:1px solid var(--border);
       border-radius:var(--radius-md);
-      background:var(--bg-secondary);
+      background:var(--callout-bg);
       color:var(--text-normal);
     }
     .download-form .btn { padding:10px 16px; }
