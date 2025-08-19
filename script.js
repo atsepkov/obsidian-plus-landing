@@ -101,7 +101,7 @@ The data coming from the outside world is color-coded to avoid confusion with yo
 + #iot 22 Oak Ridge: basement humidity 80%
         - [ ] #todo inspect dehumidifier
 + #iot 10 Market St: front door left ajar
-        - [ ] #todo contact security`,
+        - [ ] #todo call tenant`,
 
       'Project Note':
 
@@ -189,7 +189,7 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
       function walk(nodes, ctx){
         nodes.forEach(n=>{
           const nextCtx = n.text.includes(':') ? n.text.split(':')[0].trim() : ctx;
-          const children = n.children.filter(c=>!c.tags.length);
+          const children = n.children;
           let title = n.text;
           if(ctx && n.tags.some(t=>t==='todo' || t==='urgent')){
             title = `${ctx}: ${title}`;
@@ -477,10 +477,10 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
       const cmAliceLog = initEditor('aliceLog', 'aliceLogWrap');
       const cmBobDaily = initEditor('bobDaily', 'bobDailyWrap');
       const cmBobLog = initEditor('bobLog', 'bobLogWrap');
-      cmAliceDaily.setValue(`# Alice Daily Note\n- [ ] #Bob prepare Q3 report\n  - gather metrics from CRM`);
+      cmAliceDaily.setValue(`# Alice Daily Note\nFire the trigger below and watch Bob's transaction log.\n- [ ] #Bob prepare Q3 report\n  - gather metrics from CRM`);
       cmAliceLog.setValue(`# Alice Transaction Log`);
       cmBobDaily.setValue(`# Bob Daily Note\n- [ ] #Alice verify vendor invoices`);
-      cmBobLog.setValue(`# Bob Transaction Log`);
+      cmBobLog.setValue(`# Bob Transaction Log\nAppend your response under the task to send it back.`);
       requestAnimationFrame(()=>{
         [cmAliceDaily, cmAliceLog, cmBobDaily, cmBobLog].forEach(cm=>{
           styleEditorTags(cm); styleBulletLines(cm); styleHeadings(cm); updateEditorWidgets(cm);
