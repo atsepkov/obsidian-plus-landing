@@ -33,7 +33,6 @@
     };
 const cm = initEditor('noteInput', 'editorWrap');
 cm.on('change', ()=>requestAnimationFrame(render));
-cm.on('viewportChange', ()=>{ styleEditorTags(cm); styleBulletLines(cm); styleHeadings(cm); stylePageBreaks(cm); updateEditorWidgets(cm); });
 
 let dashState = { Todos:true, Payments:false, Music:true, Monitoring:false, Lockbox:true };
 
@@ -271,7 +270,8 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
       chatgpt:{ bg:'#8b5cf6', fg:'#ffffff' },
       alice:  { bg:'#ec4899', fg:'#ffffff' },
       bob:    { bg:'#f59e0b', fg:'#ffffff' },
-      application:{ bg:'green', fg:'#ffffff' }
+      application:{ bg:'green', fg:'#ffffff' },
+      lockbox:{ bg:'#be185d', fg:'#ffffff' }
     };
 
     const TAG_STYLE_EL = document.createElement('style');
@@ -400,7 +400,6 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
       inst.addOverlay(overlay);
       const refresh = ()=>{ styleEditorTags(inst); styleBulletLines(inst); styleHeadings(inst); stylePageBreaks(inst); updateEditorWidgets(inst); matchHeights(inst, wrapId); };
       inst.on('change', refresh);
-      inst.on('viewportChange', refresh);
       refresh();
       return inst;
     }
@@ -415,7 +414,15 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
       const monitoringAll = items.filter(i=>i.view === 'monitoring');
       const seenMon = new Set();
       const monitoring = [];
-      monitoringAll.forEach(it=>{ const prop = it.title.split(':')[0].trim(); if(!seenMon.has(prop)){ monitoring.push(it); seenMon.add(prop); } });
+      monitoringAll.forEach(it=>{
+        const prop = it.title.split(':')[0].trim();
+        if(it.bullet === '*') {
+          monitoring.push(it);
+        } else if(!seenMon.has(prop)) {
+          monitoring.push(it);
+          seenMon.add(prop);
+        }
+      });
       containerEl.innerHTML = tableHTML('Todos', todos) + tableHTML('Payments', payments) + tableHTML('Music', music) + tableHTML('Monitoring', monitoring) + tableHTML('Lockbox', lockboxes);
       const todoAlerts = todos.filter(i=>i.tags.includes('urgent')).length;
       const monitoringErrors = monitoring.filter(i=>i.bullet==='*').length;
