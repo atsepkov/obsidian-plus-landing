@@ -1,0 +1,9 @@
+{
+  "name": "obsidian-plus-landing",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "bun server.js"
+  },
+  "dependencies": {}
+}

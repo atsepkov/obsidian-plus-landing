@@ -757,3 +757,31 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
     
     // Initial render
     loadNote(currentNote);
+
+    // Email signup
+    document.querySelectorAll('.download-form').forEach(form => {
+      form.addEventListener('submit', async (ev) => {
+        ev.preventDefault();
+        const input = form.querySelector('input[type="email"]');
+        const email = input.value.trim();
+        if (!email) return;
+        try {
+          const res = await fetch('/api/subscribe', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email })
+          });
+          if (res.ok) {
+            const data = await res.json();
+            const msg = document.createElement('div');
+            msg.className = 'sub';
+            msg.textContent = data.status === 'duplicate' ? 'You are already on the list.' : 'Thanks! Check your inbox soon.';
+            form.replaceWith(msg);
+          } else {
+            alert('Something went wrong. Please try again later.');
+          }
+        } catch (err) {
+          alert('Network error. Please try again later.');
+        }
+      });
+    });
