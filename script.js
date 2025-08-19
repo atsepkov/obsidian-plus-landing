@@ -591,11 +591,14 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
       function setupCheckbox(inst, cb){
         function refresh(){
           if(inst._chkWidgets){ inst._chkWidgets.forEach(w=>w.remove()); }
+          if(inst._chkMarks){ inst._chkMarks.forEach(m=>m.clear()); }
           inst._chkWidgets = [];
+          inst._chkMarks = [];
           inst.eachLine(line=>{
             const text = line.text;
             const idx = text.indexOf('[');
             if(idx>=0 && /\[( |x|-)\]/.test(text.slice(idx,idx+3))){
+              const lineNo = inst.getLineNumber(line);
               const box = document.createElement('input');
               box.type = 'checkbox';
               box.className = 'cm-hover-checkbox';
@@ -604,7 +607,6 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
               box.indeterminate = state==='-';
               box.addEventListener('mousedown', e=>{
                 e.preventDefault();
-                const lineNo = inst.getLineNumber(line);
                 const lineText = inst.getLine(lineNo);
                 const curIdx = lineText.indexOf('[');
                 const curState = lineText[curIdx+1];
@@ -614,10 +616,12 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
                 if(cb) cb(newLine, lineNo);
                 requestAnimationFrame(refresh);
               });
-                inst.addWidget({line:inst.getLineNumber(line), ch:idx}, box);
-                inst._chkWidgets.push(box);
-              }
-            });
+              inst.addWidget({line:lineNo, ch:idx}, box);
+              inst._chkWidgets.push(box);
+              const mark = inst.markText({line:lineNo, ch:0}, {line:lineNo, ch:idx}, {className:'cm-chk-prefix'});
+              inst._chkMarks.push(mark);
+            }
+          });
         }
         inst.on('change',(cm,change)=>{
           if(change.origin==='+input' && cb){
