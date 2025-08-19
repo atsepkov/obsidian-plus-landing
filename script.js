@@ -581,7 +581,7 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
       const cmAliceLog = initEditor('aliceLog', 'aliceLogWrap');
       const cmBobDaily = initEditor('bobDaily', 'bobDailyWrap');
       const cmBobLog = initEditor('bobLog', 'bobLogWrap');
-      cmAliceDaily.setValue(`# Alice Daily Note\nFire the trigger below and watch Bob's transaction log.\n- [ ] #Bob prepare Q3 report\n  - gather metrics from CRM`);
+      cmAliceDaily.setValue(`# Alice Daily Note\nFire the trigger below and watch Bob's transaction log.\n- [ ] #Bob prepare Q3 report\n    - gather metrics from CRM`);
       cmAliceLog.setValue(`# Alice Transaction Log`);
       cmBobDaily.setValue(`# Bob Daily Note\n- [ ] #Alice verify vendor invoices`);
       cmBobLog.setValue(`# Bob Transaction Log\nAppend your response under the task to send it back.`);
@@ -667,7 +667,7 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
                 const parentIndent = (targetLines[j].match(/^\s*/) || ['',''])[0];
                 targetLines[j] = setLineState(targetLines[j], state);
                 let insertAt = j + 1;
-                const childIndent = parentIndent + '  ';
+                const childIndent = parentIndent + '    ';
                 while(insertAt < targetLines.length && targetLines[insertAt].startsWith(childIndent)){
                   const rel = targetLines[insertAt].slice(childIndent.length);
                   const m = rel.match(/^\s*([+*])/);
@@ -759,7 +759,7 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
               return;
             }
             let indent = baseIndent;
-            if(trimmed.startsWith('+')) indent += '  ';
+            if(trimmed.startsWith('+')) indent += '    ';
             const prefix = indent + '- ';
             inst.replaceRange('\n'+prefix, {line:pos.line, ch:line.length}, {line:pos.line, ch:line.length}, '+input');
             inst.setCursor({line:pos.line+1, ch:prefix.length});
