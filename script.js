@@ -231,7 +231,8 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
       iot:    { bg:'#0ea5e9', fg:'#ffffff' },
       chatgpt:{ bg:'#8b5cf6', fg:'#ffffff' },
       alice:  { bg:'#ec4899', fg:'#ffffff' },
-      bob:    { bg:'#f59e0b', fg:'#ffffff' }
+      bob:    { bg:'#f59e0b', fg:'#ffffff' },
+      application:{ bg:'green', fg:'#ffffff' }
     };
 
     const TAG_STYLE_EL = document.createElement('style');
