@@ -117,7 +117,7 @@
     .note-tab .count-badge { background:var(--danger); color:#fff; padding:0 6px; border-radius:10px; font-size:12px; margin-left:4px; display:none; }
 
     .scenario-tabs { display:flex; gap:8px; flex-wrap:wrap; }
-    .scenario-tab { font-size:16px; padding:6px 10px; border:1px dashed var(--border); border-radius:var(--radius-md); background:transparent; cursor:pointer; color:var(--text-muted); }
+    .scenario-tab { font-size:24px; padding:6px 10px; border:1px dashed var(--border); border-radius:var(--radius-md); background:transparent; cursor:pointer; color:var(--text-muted); }
 .scenario-tab.active, .scenario-tab:hover { border-color:var(--accent); color:var(--accent); }
 
     table { width: 100%; border-collapse: collapse; }

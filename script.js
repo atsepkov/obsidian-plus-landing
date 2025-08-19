@@ -41,7 +41,8 @@ let dashState = { Todos:true, Payments:false, Music:true, Monitoring:false };
     const SCENARIOS = {
       dashboard: {
       'Daily Note':
-`Dump anything that comes to mind into your daily notes, all information will self-organize into a database:
+`# 2015-08-17
+Dump anything that comes to mind into your daily notes, all information will self-organize into a database:
 - 15 Boardwalk: guest-reported issues
 	- [ ] #todo check leak under fridge
 		- guest says they saw a small puddle
@@ -64,6 +65,12 @@ Personal assistant directly in your notebook that pulls the context from your no
 	        + Material choices (e.g., hardwood vs. laminate)
 	    + Verify with local contractors for precise bids.
 
+Send out rental applications directly from your notebook:
+- [x] #application bcollins@gmail.com ✅ 2025-08-17
+  + email: bcollins@gmail.com
+  + google doc: https://docs.google.com/document/d/1TfG2Fg0Hl2u3q4p5r6s7t8u9v0a1b2c3/edit
+  + [ ] #waiting bcollins@gmail.com application
+
 Document music that helps you focus:
 - #music Midnight Flow Music — Night Bass
 	- https://www.youtube.com/watch?v=AVmyklX6LEA
@@ -71,9 +78,12 @@ Document music that helps you focus:
 	- ![[music_screenshot1.png]]`,
 
       'Transaction Log':
-`Transaction logs are auto-populated from external APIs + IoT devices. They're color-coded to avoid confusion with your personal notes:
+`# tx-2015-08-17
+Transaction logs are auto-populated from external APIs + IoT devices. They're like a "Daily Note" but for your systems. This is how you keep track of payments, check-ins, and other transactions.
+
+The data coming from the outside world is color-coded to avoid confusion with your personal notes:
 - your notes are white
-+ responses from outside APIs are blue
++ responses from outside APIs (or people) are blue
 * errors are red
 
 + #check-in 15 Boardwalk: Matt Smith ⏳ 2025-08-17 
@@ -125,8 +135,8 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
     let currentNote = 'Daily Note';
     const noteTabs = document.querySelectorAll('.note-tab[data-note]');
     const SCENARIO_DESCS = {
-      dashboard: "Jordan manages several rentals. He spends a lot of time on the go, with his phone. He's a big proponent of GTD, but struggled to implement it in an electronic form. No tool was flexible enough, and most fell apart if system wasn't followed religiously. With Obsidian+, the data organizes itself. Now his daily notes are his inbox basket. His properties are his projects, marking something with a tag flags it important, everything else becomes reference. Jordan can quickly see who paid the rent and if there is a water leak. Problems surface to the top before they become emergencies.",
-      handoff: 'Alice and Bob are coworkers sharing linked notebooks. Check a task tagged with your teammate (e.g. #Bob) to send it to their Transaction Log so nothing falls through the cracks.'
+      dashboard: "Jordan manages several rentals. He spends a lot of time on the go, with his phone. He's a big proponent of GTD, but struggled to implement it in an electronic form. No tool was flexible enough, and most fell apart if the system wasn't followed religiously. With Obsidian+, the effort of organizing data is offloaded from the user to the system. Now Jordan uses his daily note as his inbox basket. His properties are his projects, marking something with a tag flags it important, everything else becomes reference. Jordan can quickly see who paid the rent and if there is a water leak. Problems surface to the top before they become emergencies.",
+      handoff: 'Alice and Bob are coworkers sharing linked notebooks. They routinely coordinate on tasks by sending them to each other. Try playing around with the notebooks below. You can add a message before sending a response, or cancel a task to see how the other notebook responds (to cancel a task, click it twice).'
     };
     scenarioDescEl.textContent = SCENARIO_DESCS.dashboard;
     scenarioTabs.forEach(tab=>{
