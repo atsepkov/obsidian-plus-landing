@@ -19,11 +19,12 @@
       token: function(stream) {
         if (stream.sol()) {
           stream.eatSpace();
-          const ch = stream.peek();
-          if (ch === '+' || ch === '-' || ch === '*') {
-            stream.next();
-            return ch === '+' ? 'bullet-plus' : (ch === '*' ? 'bullet-star' : 'bullet-dash');
-          }
+        const ch = stream.peek();
+        if (ch === '+' || ch === '-' || ch === '*') {
+          stream.next();
+          if (stream.match(/\s*\[(?:x|\s|-)\]/, false)) return null;
+          return ch === '+' ? 'bullet-plus' : (ch === '*' ? 'bullet-star' : 'bullet-dash');
+        }
         }
         const m = stream.match(/#[A-Za-z0-9_-]+/);
         if (m) return 'tag tag-' + m[0].slice(1).toLowerCase();
@@ -81,6 +82,7 @@ Document music that helps you focus:
 - #music Hypermind Music — Limitless Productivity Playlist
         - https://www.youtube.com/watch?v=4MFOBeUCPkw
         - coding, focus, chill
+        - ![[music_screenshot2.png]]
 - [x] #todo order new keys ✅ 2025-08-16
 ---
 # 2015-08-15
@@ -88,6 +90,7 @@ Document music that helps you focus:
 - #music Night at Work | Instrumental Chill Music Mix
         - https://www.youtube.com/watch?v=n9Y2Eb4BaSg
         - optimistic, calm, focus
+        - ![[music_screenshot3.png]]
         - ~8min: Audial - Silhouette
 - [x] #todo replace hallway bulbs ✅ 2025-08-15`,
 
@@ -186,7 +189,7 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
         const clean = line.trim();
         const bulletCharRaw = /^[-+*]/.test(clean) ? clean.charAt(0) : '';
         const hasCheckbox = /^[-+*]\s*\[(?:x|\s|-)\]/i.test(clean);
-        const bulletChar = hasCheckbox ? '-' : bulletCharRaw;
+        const bulletChar = bulletCharRaw;
         const statusChar = (clean.match(/^[-+*]\s*\[( |x|-)\]/i)||[])[1] || ' ';
         const status = statusChar === 'x' ? 'done' : statusChar === '-' ? 'cancelled' : 'open';
         const tags = Array.from(clean.matchAll(/#([A-Za-z0-9_-]+)/g)).map(m=>m[1].toLowerCase());
@@ -321,16 +324,16 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
     }
 
     function styleBulletLines(inst){
-      inst.eachLine(line=>{
-        inst.removeLineClass(line, 'text', 'cm-bullet-plus');
-        inst.removeLineClass(line, 'text', 'cm-bullet-star');
-        inst.removeLineClass(line, 'text', 'cm-bullet-dash');
-        const text = line.text.trimStart();
-        const hasCheckbox = /^[-+*]\s*\[(?:x|\s|-)\]/i.test(text);
-        if (text.startsWith('+') && !hasCheckbox) inst.addLineClass(line, 'text', 'cm-bullet-plus');
-        else if (text.startsWith('*')) inst.addLineClass(line, 'text', 'cm-bullet-star');
-        else if (text.startsWith('-') && !hasCheckbox) inst.addLineClass(line, 'text', 'cm-bullet-dash');
-      });
+        inst.eachLine(line=>{
+          inst.removeLineClass(line, 'text', 'cm-bullet-plus');
+          inst.removeLineClass(line, 'text', 'cm-bullet-star');
+          inst.removeLineClass(line, 'text', 'cm-bullet-dash');
+          const text = line.text.trimStart();
+          const ch = text.charAt(0);
+          if (ch === '+') inst.addLineClass(line, 'text', 'cm-bullet-plus');
+          else if (ch === '*') inst.addLineClass(line, 'text', 'cm-bullet-star');
+          else if (ch === '-') inst.addLineClass(line, 'text', 'cm-bullet-dash');
+        });
     }
 
     function styleEditorBullets(){
