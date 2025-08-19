@@ -134,21 +134,38 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
   - [ ] #todo run electrical
   - [x] #pay $3500 (Mario - plumbing) ✅ 2025-08-17
   - [ ] #urgent extend building permit
+  - built 1910, 4-unit building currently vacant
+  - planning to convert attic to office space
   - #lockbox 3213
 ---
 # 15 Boardwalk
+- 2BR beachfront condo, roof replaced 2024
+- Tenants: Sam & Alex — $2400/mo
+- [ ] #todo schedule annual HVAC service
 - #lockbox 8451
 ---
 # 5 Bow St
+- Triple-decker built 1920; exterior paint peeling
+- Tenants: Unit 1 vacant; Unit 2 Lisa — $1800/mo; Unit 3 Mark — $1750/mo
+- [ ] #todo replace front steps
 - #lockbox 4821
 ---
 # 16 Pearl St
+- Studio building renovated 2018
+- Tenant: Jill — $1200/mo
+- [ ] #todo service HVAC
 - #lockbox 9374
 ---
 # 22 Oak Ridge
+- Single-family with damp basement
+- Tenants: Alice & Paul — $2800/mo
+- [ ] #todo plan kitchen remodel
 - #lockbox 5582
 ---
 # 10 Market St
+- Mixed-use: coffee shop below, apartment above
+- Rent: shop $3500/mo; apartment vacant
+- [ ] #todo install security cameras
 - #lockbox 1045`,
 
       'Music Library':
