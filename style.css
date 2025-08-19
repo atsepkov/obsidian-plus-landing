@@ -190,7 +190,7 @@
     }
 
     /* CodeMirror tweaks */
-    .CodeMirror { height:100%; border:1px solid var(--border); border-radius: var(--radius-md); font-size:13px; background:var(--callout-bg); color:var(--text-normal); }
+    .CodeMirror { height:100%; border:1px solid var(--border); border-radius: var(--radius-md); font-size:13px; background:var(--callout-bg); color:var(--text-normal); font-family:var(--font-sans); }
     .CodeMirror-lines { padding:10px; }
     .CodeMirror-cursor { border-left:1px solid var(--text-normal); }
     .cm-tag { color:#fff; border-radius:10px; padding:1px 5px; line-height: normal; display:inline-block; }

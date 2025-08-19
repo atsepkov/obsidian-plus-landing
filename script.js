@@ -135,10 +135,10 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
     let currentNote = 'Daily Note';
     const noteTabs = document.querySelectorAll('.note-tab[data-note]');
     const SCENARIO_DESCS = {
-      dashboard: "Jordan manages several rentals. He spends a lot of time on the go, with his phone. He's a big proponent of GTD, but struggled to implement it in an electronic form. No tool was flexible enough, and most fell apart if the system wasn't followed religiously. With Obsidian+, the effort of organizing data is offloaded from the user to the system. Now Jordan uses his daily note as his inbox basket. His properties are his projects, marking something with a tag flags it important, everything else becomes reference. Jordan can quickly see who paid the rent and if there is a water leak. Problems surface to the top before they become emergencies.",
-      handoff: 'Alice and Bob are coworkers sharing linked notebooks. They routinely coordinate on tasks by sending them to each other. Try playing around with the notebooks below. You can add a message before sending a response, or cancel a task to see how the other notebook responds (to cancel a task, click it twice).'
+      dashboard: `Jordan manages several rentals. He spends a lot of time on the go, with his phone. He's a big proponent of GTD, but struggled to implement it in an electronic form. No tool was flexible enough, and most fell apart if the system wasn't followed religiously. With Obsidian+, the effort of organizing data is offloaded from the user to the system. Now Jordan uses his daily note as his <strong style="color:var(--accent);">inbox</strong> basket. His properties are his <strong style="color:var(--accent);">projects</strong>, marking something with a tag flags it important, everything else becomes <strong style="color:var(--accent);">reference</strong>. Jordan can quickly see who paid the rent and if there is a water leak. Problems surface to the top before they become emergencies.`,
+      handoff: `Alice and Bob are coworkers sharing linked notebooks. They routinely coordinate on tasks by sending them to each other. Try playing around with the notebooks below. You can add a message before sending a response, or cancel a task to see how the other notebook responds (to cancel a task, click it twice).`
     };
-    scenarioDescEl.textContent = SCENARIO_DESCS.dashboard;
+    scenarioDescEl.innerHTML = SCENARIO_DESCS.dashboard;
     scenarioTabs.forEach(tab=>{
       tab.addEventListener('click', ()=>{
         const name = tab.dataset.scenario;
@@ -146,7 +146,7 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
           s.style.display = s.classList.contains('scenario-'+name) ? 'grid' : 'none';
         });
         scenarioTabs.forEach(t=>t.classList.toggle('active', t===tab));
-        scenarioDescEl.textContent = SCENARIO_DESCS[name];
+        scenarioDescEl.innerHTML = SCENARIO_DESCS[name];
         if(name==='handoff' && typeof initHandoff === 'function') initHandoff();
       });
     });
