@@ -11,7 +11,7 @@ const insertStmt = db.prepare(
   "INSERT INTO emails (email, created_at) VALUES (?, datetime('now'))"
 );
 
-const port = parseInt(process.env.PORT || "3000", 10);
+const port = parseInt(process.env.PORT || "3500", 10);
 
 const server = Bun.serve({
   port,
