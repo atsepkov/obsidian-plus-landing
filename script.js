@@ -884,8 +884,8 @@ This page is dedicated to a specific project, it's not part of the daily notes. 
           if (res.ok) {
             const data = await res.json();
             const msg = document.createElement('div');
-            msg.className = 'sub';
-            msg.textContent = data.status === 'duplicate' ? 'You are already on the list.' : 'Thanks! Check your inbox soon.';
+            msg.className = 'subscribe';
+            msg.textContent = data.status === 'duplicate' ? 'You are already on the list.' : 'Thanks! We\'re preparing your notebook, it will be in your inbox soon.';
             form.replaceWith(msg);
           } else {
             alert('Something went wrong. Please try again later.');
