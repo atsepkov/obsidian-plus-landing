@@ -46,14 +46,16 @@
     }
 
     /* Base */
-    html, body { height: 100%; overflow-x: hidden; }
+    *, *::before, *::after { box-sizing: border-box; }
+    img { max-width: 100%; height: auto; display: block; }
+    html, body { height: 100%; max-width: 100%; overflow-x: hidden; }
     body {
       margin: 0; background: var(--bg-primary); color: var(--text-normal);
       font-family: var(--font-sans); line-height: 1.6; -webkit-font-smoothing: antialiased;
     }
     a { color: var(--accent); text-decoration: none; }
     a:hover { color: var(--accent-strong); }
-    .container { width: 100%; max-width: var(--content-max); margin: 0 auto; padding: 0 20px; box-sizing: border-box; }
+    .container { width: 100%; max-width: var(--content-max); margin: 0 auto; padding: 0 20px; }
     .btn { display: inline-flex; align-items: center; gap: 10px; padding: 12px 18px; border-radius: var(--radius-lg); border: 1px solid var(--border); background: var(--bg-secondary); box-shadow: var(--shadow); font-weight: 600; }
     .btn.primary { background: linear-gradient(180deg, var(--accent), var(--accent-strong)); color: white; border-color: transparent; }
     .btn.ghost { background: transparent; }
@@ -66,6 +68,7 @@
     header { position: sticky; top: 0; z-index: 50; backdrop-filter: blur(10px); background: color-mix(in srgb, var(--bg-primary) 85%, transparent); border-bottom: 1px solid var(--border); }
     .hero .tagline { font-size: 24px; color: var(--accent); font-style: italic; }
     .nav { display: flex; align-items: center; justify-content: space-between; height: 64px; }
+    .menu-toggle { display: none; background: none; border: none; color: var(--text-normal); cursor: pointer; font-size: 24px; }
     .logo { display: flex; align-items: center; gap: 12px; font-weight: 800; letter-spacing: .2px; }
     .logo svg { width: 24px; height: 24px; }
     .nav a { color: var(--text-muted); font-weight: 600; margin-left: 16px; }
@@ -295,10 +298,12 @@
 
     @media (max-width: 600px) {
       .nav { flex-direction: column; align-items: flex-start; height: auto; }
-      .nav nav { width: 100%; display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
+      .menu-toggle { display: block; margin-left: auto; }
+      .nav nav { width: 100%; display: none; flex-direction: column; gap: 8px; margin-top: 8px; }
+      .nav nav.open { display: flex; }
       .nav nav a { margin-left: 0; width: 100%; display: block; }
       .hero .cta { flex-direction: column; }
-      .hero .cta .btn { width: 100%; justify-content: center; }
+      .hero .cta .btn { display: flex; width: 100%; justify-content: center; }
     }
 
 .CodeMirror .cm-h1 { font-size:24px !important; font-weight:700 !important; color:var(--accent) !important; }
