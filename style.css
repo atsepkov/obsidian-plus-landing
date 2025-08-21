@@ -312,7 +312,12 @@
         border-bottom: 1px solid var(--border);
       }
       .nav nav.open { display: flex; }
-      .nav nav a { margin-left: 0; width: 100%; display: block; }
+      .nav nav a {
+        margin-left: 0;
+        width: 100%;
+        display: block;
+        padding: 8px 16px;
+      }
       .hero .cta { flex-direction: column; }
       .hero .cta .btn { display: flex; width: 100%; justify-content: center; }
     }
