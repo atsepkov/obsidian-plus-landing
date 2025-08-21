@@ -54,6 +54,12 @@ const server = Bun.serve({
       }
     }
 
+    if (req.method === "GET" && url.pathname === "/preview.png") {
+      return new Response(Bun.file("./preview.png"), {
+        headers: { "Content-Type": "image/png" },
+      });
+    }
+
     let filePath = url.pathname === "/" ? "/index.html" : url.pathname;
     try {
       return new Response(Bun.file(`.${filePath}`));
