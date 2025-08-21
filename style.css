@@ -68,7 +68,7 @@
     header { position: sticky; top: 0; z-index: 50; backdrop-filter: blur(10px); background: color-mix(in srgb, var(--bg-primary) 85%, transparent); border-bottom: 1px solid var(--border); }
     .hero .tagline { font-size: 24px; color: var(--accent); font-style: italic; }
     .nav { display: flex; align-items: center; justify-content: space-between; height: 64px; }
-    .menu-toggle { display: none; background: none; border: none; color: var(--text-normal); cursor: pointer; font-size: 24px; }
+    .menu-toggle { display: none; background: none; border: none; color: var(--text-normal); cursor: pointer; font-size: 24px; line-height: 1; padding: 0; }
     .logo { display: flex; align-items: center; gap: 12px; font-weight: 800; letter-spacing: .2px; }
     .logo svg { width: 24px; height: 24px; }
     .nav a { color: var(--text-muted); font-weight: 600; margin-left: 16px; }
@@ -297,9 +297,20 @@
     @media (max-width: 960px) { .demo-wrap { grid-template-columns: 1fr; } }
 
     @media (max-width: 600px) {
-      .nav { flex-direction: column; align-items: flex-start; height: auto; }
-      .menu-toggle { display: block; margin-left: auto; }
-      .nav nav { width: 100%; display: none; flex-direction: column; gap: 8px; margin-top: 8px; }
+      .nav { position: relative; }
+      .menu-toggle { display: flex; align-items: center; }
+      .nav nav {
+        position: absolute;
+        top: 64px;
+        left: 0;
+        right: 0;
+        display: none;
+        flex-direction: column;
+        gap: 8px;
+        padding: 8px 0 16px;
+        background: color-mix(in srgb, var(--bg-primary) 95%, transparent);
+        border-bottom: 1px solid var(--border);
+      }
       .nav nav.open { display: flex; }
       .nav nav a { margin-left: 0; width: 100%; display: block; }
       .hero .cta { flex-direction: column; }
