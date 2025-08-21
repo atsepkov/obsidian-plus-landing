@@ -9,7 +9,16 @@
       function toggleTheme(){ root.dataset.theme = root.dataset.theme === 'dark' ? 'light' : 'dark'; localStorage.setItem('theme', root.dataset.theme); }
       window.addEventListener('keydown', (ev) => { if ((ev.metaKey || ev.ctrlKey) && ev.key.toLowerCase() === 'd') { toggleTheme(); ev.preventDefault(); } });
     })();
-    
+
+    // === Mobile nav ===
+    const navToggle = document.getElementById('navToggle');
+    if (navToggle) {
+      navToggle.addEventListener('click', () => {
+        const menu = document.querySelector('.nav nav');
+        if (menu) menu.classList.toggle('open');
+      });
+    }
+
     // === Elements ===
     const includePadEl = document.getElementById('includePad');
     const containerEl = document.getElementById('viewContainer');
