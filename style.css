@@ -113,6 +113,11 @@
     }
     .download-form .btn { padding:10px 16px; }
 
+    /* Platforms */
+    #platforms { padding-bottom: 0; }
+    #platforms img { max-width: 100%; }
+    #demo { padding-top: 0; }
+
     /* Demo */
     .demo-wrap { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
     .panel { padding: 12px; }
